@@ -1,6 +1,9 @@
 import express, { Express } from "express";
 import cors from "cors";
 import { UserRoutes } from "./routes/userRoutes";
+import dotenv from "dotenv"
+import cookieParser from "cookie-parser"
+dotenv.config()
 
 export class App {
   private app: Express;
@@ -13,13 +16,22 @@ export class App {
 
   private setupMiddlewares() {
     const corsOptions = {
-      origin: true,
-      methods: "GET,POST,PUT,PATCH,DELETE",
+      origin: process.env.CLIENT_URL,
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       credentials: true,
-      allowedHeaders: "Content-Type,Authorization",
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+        "Accept",
+        "Origin"
+      ],
+      preflightContinue: false,
+      optionsSuccessStatus: 204
     };
 
     this.app.use(cors(corsOptions));
+    this.app.use(cookieParser());
     this.app.use(express.json());
   }
 
