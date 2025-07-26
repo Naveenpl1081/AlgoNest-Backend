@@ -8,7 +8,6 @@ export class BaseRepository<T extends Document> {
   }
 
   async findOne(filter: FilterQuery<T>): Promise<T | null> {
-    console.log("ethi");
     const user = this.model.findOne(filter);
     return user;
   }

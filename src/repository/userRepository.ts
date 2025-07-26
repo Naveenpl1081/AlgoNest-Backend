@@ -34,4 +34,5 @@ export class UserRepository
       throw new Error("An error occurred while creating the user");
     }
   }
+  
 }
