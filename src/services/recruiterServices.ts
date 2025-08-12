@@ -1,8 +1,4 @@
 import { OtpPurpose, TEMP_USER_EXPIRY_SECONDS } from "../config/otpConfig";
-import { UpdateProfileDTO } from "../interfaces/DTO/IServices/IUserServise";
-import { IUser } from "../interfaces/models/Iuser";
-import { uploadToCloudinary } from "../utils/cloudinary";
-import { AdminUserListResponse } from "../interfaces/DTO/IServices/IAdminServise";
 
 import { Roles } from "../config/roles";
 import {
@@ -11,24 +7,24 @@ import {
   TempUserResponse,
   LoginResponse,
 } from "../interfaces/DTO/IServices/IUserServise";
-import { IUserService } from "../interfaces/Iserveices/IuserService";
 import { inject, injectable } from "tsyringe";
-import { IUserRepository } from "../interfaces/Irepositories/IuserRepository";
+import { IRecruiterRepository } from "../interfaces/Irepositories/IrecruiterRepository";
 import { IPasswordHash } from "../interfaces/IpasswordHash/IpasswordHash";
 import { IOTPService } from "../interfaces/Iotp/IOTP";
 import { IEmailService } from "../interfaces/Iserveices/IEmailService";
 import { IOTPRedis } from "../interfaces/Iredis/IOTPRedis";
 import { IJwtService } from "../interfaces/IJwt/Ijwt";
+import { IRecruiterService } from "../interfaces/Iserveices/IrecruiterService";
 
 @injectable()
-export class UserService implements IUserService {
+export class RecruiterService implements IRecruiterService {
   constructor(
-    @inject("IUserRepository") private _userRepository: IUserRepository,
+    @inject("IRecruiterRepository") private _recruiterRepository: IRecruiterRepository,
     @inject("IPasswordHash") private _passwordService: IPasswordHash,
     @inject("IOTPService") private _otpService: IOTPService,
     @inject("IEmailService") private _emailService: IEmailService,
     @inject("IOTPRedis") private _otpRedisService: IOTPRedis,
-    @inject("IJwtService") private _jwtService: IJwtService
+    @inject("IJwtService") private _jwtService:IJwtService
   ) {}
 
   private async generateAndSendOtp(
@@ -40,17 +36,17 @@ export class UserService implements IUserService {
     return otp;
   }
 
-  async userSignUp(data: SignupUserData): Promise<TempUserResponse> {
+  async recruiterSignUp(data: SignupUserData): Promise<TempUserResponse> {
     try {
-      console.log("entering usersignup function in the user service");
+      console.log("entering usersignup function in the recruiter service");
       const { email, username, password } = data;
       console.log("Storing OTP for:", email);
 
-      const existing = await this._userRepository.findByEmail(email);
+      const existing = await this._recruiterRepository.findByEmail(email);
       console.log("result in usersignup", existing);
       if (existing) {
         return {
-          message: "user already exsist",
+          message: "Recruiter already exsist",
           success: false,
         };
       }
@@ -77,7 +73,7 @@ export class UserService implements IUserService {
       };
     } catch (error) {
       return {
-        message: "failed to create user",
+        message: "failed to create Recruiter",
         success: false,
       };
     }
@@ -86,7 +82,7 @@ export class UserService implements IUserService {
     email: string,
     otp: string
   ): Promise<{ success: boolean; message: string }> {
-    console.log("Verifying OTP for:", email);
+    console.log("Verifying recruiter OTP for:", email);
     const data = await this._otpRedisService.getOTP(email);
     console.log("redisdata", data);
 
@@ -100,15 +96,15 @@ export class UserService implements IUserService {
 
     const { username, password } = data;
 
-    if (data.purpose !== "FORGOT_PASSWORD") {
-      await this._userRepository.createUser({
+    if(data.purpose!=="FORGOT_PASSWORD"){
+      await this._recruiterRepository.createRecruiter({
         username,
         email,
         password,
       });
     }
 
-    // await this._userRepository.createUser({
+    // await this._recruiterRepository.createRecruiter({
     //   username,
     //   email,
     //   password,
@@ -116,20 +112,21 @@ export class UserService implements IUserService {
 
     await this._otpRedisService.deleteOTP(email);
 
-    return { success: true, message: "User created successfully" };
+    return { success: true, message: "Recruiter created successfully" };
   }
 
-  async userLogin(data: LoginUserData): Promise<LoginResponse> {
+  async recruiterLogin(data: LoginUserData): Promise<LoginResponse> {
     try {
       const { email, password } = data;
 
-      const validUser = await this._userRepository.findByEmail(email);
+      const validUser = await this._recruiterRepository.findByEmail(email);
       if (!validUser) {
         return {
           message: "User Not Found",
           success: false,
         };
       }
+      console.log("validuser",validUser)
 
       const isPasswordValid = await this._passwordService.verify(
         validUser.password,
@@ -142,16 +139,15 @@ export class UserService implements IUserService {
           success: false,
         };
       }
-      const userId = String(validUser._id);
+      const userId=String(validUser._id)
       const access_token = this._jwtService.generateAccessToken(
         userId,
-        Roles.USER
+        Roles.RECRUITER
       );
-      const refresh_token = this._jwtService.generateRefreshToken(
-        String(userId),
-        Roles.USER
-      );
-
+      const refresh_token = this._jwtService.generateRefreshToken(String(userId),Roles.RECRUITER);
+      
+      console.log(refresh_token)
+  
       return {
         success: true,
         message: "Login Successful",
@@ -171,31 +167,28 @@ export class UserService implements IUserService {
     }
   }
 
-  async resendOtp(
-    email: string
-  ): Promise<{ success: boolean; message: string }> {
+  async resendOtp(email: string): Promise<{ success: boolean; message: string }> {
     try {
+   
       let redisData = await this._otpRedisService.getOTP(email);
-
+  
+      
       if (!redisData) {
         redisData = await this._otpRedisService.getBackupData(email);
         if (!redisData) {
           return {
             success: false,
-            message:
-              "Your OTP has expired and no data is found. Please sign up again.",
+            message: "Your OTP has expired and no data is found. Please sign up again.",
           };
         }
       }
-
+  
+      
       const otp = await this.generateAndSendOtp(email, OtpPurpose.REGISTRATION);
-
-      await this._otpRedisService.setOTP(
-        email,
-        { ...redisData, otp },
-        TEMP_USER_EXPIRY_SECONDS
-      );
-
+  
+     
+      await this._otpRedisService.setOTP(email, { ...redisData, otp }, TEMP_USER_EXPIRY_SECONDS);
+  
       return {
         success: true,
         message: "OTP resent successfully!",
@@ -208,50 +201,40 @@ export class UserService implements IUserService {
       };
     }
   }
-
-  async forgotPassword(
-    email: string
-  ): Promise<{ success: boolean; message: string; email?: string }> {
+  
+  
+  async forgotPassword(email: string): Promise<{ success: boolean; message: string; email?: string }> {
     try {
-      const user = await this._userRepository.findByEmail(email);
-      console.log("user service", user);
-
+      const user = await this._recruiterRepository.findByEmail(email);
+      console.log("Recruiter service", user);
+  
       if (!user) {
-        return { success: false, message: "User not found." };
+        return { success: false, message: "Recruiter not found." };
       }
-
-      const otp = await this.generateAndSendOtp(
-        email,
-        OtpPurpose.FORGOT_PASSWORD
-      );
-
+  
+      const otp = await this.generateAndSendOtp(email, OtpPurpose.FORGOT_PASSWORD);
+  
       const redisPayload = {
         email,
         otp,
         purpose: OtpPurpose.FORGOT_PASSWORD,
       };
-
-      await this._otpRedisService.setOTP(
-        email,
-        redisPayload,
-        TEMP_USER_EXPIRY_SECONDS
-      );
-
+  
+      await this._otpRedisService.setOTP(email, redisPayload, TEMP_USER_EXPIRY_SECONDS);
+  
       return { success: true, message: "OTP sent to your email.", email };
     } catch (error) {
       console.error("ForgotPassword Error:", error);
       return { success: false, message: "Something went wrong." };
     }
   }
+  
 
-  async resetPassword(
-    email: string,
-    newPassword: string
-  ): Promise<{ success: boolean; message: string }> {
+  async resetPassword(email: string, newPassword: string): Promise<{ success: boolean; message: string }> {
     try {
-      const user = await this._userRepository.findByEmail(email);
+      const user = await this._recruiterRepository.findByEmail(email);
       if (!user) {
-        return { success: false, message: "User not found." };
+        return { success: false, message: "Recruiter not found." };
       }
       const hashedPassword = await this._passwordService.hash(newPassword);
       user.password = hashedPassword;
@@ -259,90 +242,6 @@ export class UserService implements IUserService {
       return { success: true, message: "Password updated successfully." };
     } catch (error) {
       return { success: false, message: "Failed to update password." };
-    }
-  }
-
-  async getUserProfile(userId: string) {
-    console.log("profile service reached");
-    const user = await this._userRepository.findById(userId);
-    console.log("service pro", user);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-    return {
-      username: user.username,
-      email: user.email,
-      createdAt: user.createdAt,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      github: user.github,
-      linkedin: user.linkedin,
-      profileImage: user.profileImage,
-    };
-  }
-
-  async updateProfile(data: UpdateProfileDTO): Promise<IUser | null> {
-    console.log("changed data", data);
-    const { userId, firstName, lastName, github, linkedin, profileImage } =
-      data;
-    console.log("profile image", profileImage);
-
-    try {
-      const updatedFields: Partial<IUser> = {
-        firstName,
-        lastName,
-        github,
-        linkedin,
-      };
-
-      if (profileImage) {
-        const uploadedUrl = await uploadToCloudinary(profileImage);
-        updatedFields.profileImage = uploadedUrl;
-      }
-      console.log("uploadedUrl", updatedFields.profileImage);
-
-      const updatedUser = await this._userRepository.updateUserProfile(
-        userId,
-        updatedFields
-      );
-      return updatedUser;
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      throw new Error("Profile update failed");
-    }
-  }
-
-  async getAllUsers(): Promise<AdminUserListResponse> {
-    try {
-      const users = await this._userRepository.findAllUsers();
-
-      return {
-        success: true,
-        message: "Users fetched successfully",
-        users,
-      };
-    } catch (error) {
-      console.error("Error in AdminService.getAllUsers:", error);
-      return {
-        success: false,
-        message: "Failed to retrieve users",
-      };
-    }
-  }
-  async findOneUser(userId: string): Promise<IUser | null> {
-    try {
-      const user = await this._userRepository.findById(userId);
-      const newStatus: "Active" | "InActive" =
-        user.status === "Active" ? "InActive" : "Active";
-      const updatedUser = await this._userRepository.findUserAndUpdate(
-        userId,
-        newStatus
-      );
-      return updatedUser;
-    } catch (error) {
-      console.log("error occured:", error);
-      return null;
     }
   }
 }

@@ -5,7 +5,12 @@ export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
-  status?: "Active" | "InActive";
+  firstName?: string;
+  lastName?: string;
+  github?: string;
+  linkedin?: string;
+  profileImage?: string;
+  status?: string
   createdAt?: Date;
   updatedAt?: Date;
 }

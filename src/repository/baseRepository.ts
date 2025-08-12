@@ -16,4 +16,9 @@ export class BaseRepository<T extends Document> {
     const createDoc = await this.model.create(data);
     return await createDoc.save();
   }
+  async findById(id: string): Promise<T | null> {
+    const user = await this.model.findById(id);
+    return user;
+  }
+
 }

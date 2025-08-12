@@ -40,3 +40,12 @@ export interface CustomPayload {
   role?: string;
 }
 
+export interface UpdateProfileDTO {
+  userId: string;
+  firstName?: string;
+  lastName?: string;
+  github?: string;
+  linkedin?: string;
+  profileImage?: string ; 
+}
+
