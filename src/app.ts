@@ -1,9 +1,14 @@
 import express, { Express } from "express";
 import cors from "cors";
 import { UserRoutes } from "./routes/userRoutes";
-import dotenv from "dotenv"
-import cookieParser from "cookie-parser"
-dotenv.config()
+import { RecruiterRoutes } from "./routes/recuiterRoutes";
+import { AuthRoute } from "./routes/authRoutes";
+import { AdminRoutes } from "./routes/adminRoutes";
+import loggerMiddleware from "./middleware/loggerMiddleware";
+
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+dotenv.config();
 
 export class App {
   private app: Express;
@@ -15,6 +20,8 @@ export class App {
   }
 
   private setupMiddlewares() {
+    this.app.use(loggerMiddleware.getMiddleware());
+
     const corsOptions = {
       origin: process.env.CLIENT_URL,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -24,10 +31,10 @@ export class App {
         "Authorization",
         "X-Requested-With",
         "Accept",
-        "Origin"
+        "Origin",
       ],
       preflightContinue: false,
-      optionsSuccessStatus: 204
+      optionsSuccessStatus: 204,
     };
 
     this.app.use(cors(corsOptions));
@@ -37,7 +44,13 @@ export class App {
 
   private setupRoutes() {
     const userRoutes = new UserRoutes();
+    const recruiterRoutes = new RecruiterRoutes();
+    const authRoute = new AuthRoute();
+    const adminRoutes = new AdminRoutes();
     this.app.use("/api/user", userRoutes.getRouter());
+    this.app.use("/api/recruiter", recruiterRoutes.getRouter());
+    this.app.use("/api/admin", adminRoutes.getRouter());
+    this.app.use("/api", authRoute.getRouter());
   }
 
   public getInstance(): Express {

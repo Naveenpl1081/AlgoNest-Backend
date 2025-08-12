@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { IUserService } from "../interfaces/Iserveices/IuserService";
 import { IUserController } from "../interfaces/Icontrollers/IuserController";
 import { injectable, inject } from "tsyringe";
+import { HTTP_STATUS } from "../utils/httpStatus";
 
 @injectable()
 export class UserController implements IUserController {
@@ -15,12 +16,14 @@ export class UserController implements IUserController {
       const serviceResponse = await this._userService.userSignUp(data);
       console.log("serviceResponse in the register function", serviceResponse);
       if (serviceResponse.success) {
-        res.status(201).json(serviceResponse);
+        res.status(HTTP_STATUS.CREATED).json(serviceResponse);
       } else {
-        res.status(409).json({ message: serviceResponse.message });
+        res
+          .status(HTTP_STATUS.CONFLICT)
+          .json({ message: serviceResponse.message });
       }
     } catch (err: any) {
-      res.status(400).json({ error: err.message });
+      res.status(HTTP_STATUS.BAD_REQUEST).json({ error: err.message });
     }
   }
 
@@ -32,44 +35,51 @@ export class UserController implements IUserController {
       const response = await this._userService.verifyOtp(email, otp);
       console.log("response", response);
       if (response.success) {
-        res.status(200).json(response);
+        res.status(HTTP_STATUS.OK).json(response);
       } else {
-        res.status(400).json(response);
+        res.status(HTTP_STATUS.BAD_REQUEST).json(response);
       }
     } catch (err: any) {
-      res.status(500).json({ message: err.message });
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ message: err.message });
     }
   }
   async login(req: Request, res: Response): Promise<void> {
     try {
       console.log("login controller reached");
       const data = req.body;
-  
+
       const response = await this._userService.userLogin(data);
-  
+
       if (response.success) {
-        
-        const { access_token, refresh_token, data: userData, message } = response;
-  
-        res.cookie("user_refresh_token", refresh_token, {
+        const {
+          access_token,
+          refresh_token,
+          data: userData,
+          message,
+        } = response;
+
+        res.cookie("refresh_token", refresh_token, {
           httpOnly: true,
-          secure: true, 
+          secure: true,
           sameSite: "strict",
           maxAge: 3 * 24 * 60 * 60 * 1000,
         });
-  
-        
-        res.status(200).json({
+
+        res.status(HTTP_STATUS.OK).json({
           success: true,
           message,
           access_token,
           data: userData,
         });
       } else {
-        res.status(409).json({ message: response.message });
+        res.status(HTTP_STATUS.CONFLICT).json({ message: response.message });
       }
     } catch (err: any) {
-      res.status(500).json({ error: err.message || "Internal server error" });
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ error: err.message || "Internal server error" });
     }
   }
 
@@ -80,13 +90,15 @@ export class UserController implements IUserController {
       const response = await this._userService.resendOtp(email);
 
       if (response.success) {
-        res.status(200).json(response);
+        res.status(HTTP_STATUS.OK).json(response);
       } else {
-        res.status(400).json(response);
+        res.status(HTTP_STATUS.BAD_REQUEST).json(response);
       }
     } catch (err: any) {
       console.error("Resend OTP Controller Error:", err);
-      res.status(500).json({ message: "Internal server error" });
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ message: "Internal server error" });
     }
   }
 
@@ -98,12 +110,14 @@ export class UserController implements IUserController {
       const response = await this._userService.forgotPassword(email);
       console.log("repsonse for checking the forgotpassword", response);
       if (response.success) {
-        res.status(200).json(response);
+        res.status(HTTP_STATUS.OK).json(response);
       } else {
-        res.status(404).json(response);
+        res.status(HTTP_STATUS.NOT_FOUND).json(response);
       }
     } catch (error: any) {
-      res.status(500).json({ success: false, message: error.message });
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ success: false, message: error.message });
     }
   }
 
@@ -118,12 +132,90 @@ export class UserController implements IUserController {
         newPassword
       );
       if (response.success) {
-        res.status(200).json(response);
+        res.status(HTTP_STATUS.OK).json(response);
       } else {
-        res.status(400).json(response);
+        res.status(HTTP_STATUS.BAD_REQUEST).json(response);
       }
     } catch (error: any) {
-      res.status(500).json({ success: false, message: error.message });
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ success: false, message: error.message });
+    }
+  }
+
+  async profile(req: Request, res: Response): Promise<void> {
+    try {
+      console.log("reached profile");
+      const userId = (req as any).user?.Id;
+      console.log("userId", userId);
+      if (!userId) {
+        res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json({ message: "User ID missing from token." });
+        return;
+      }
+
+      const user = await this._userService.getUserProfile(userId);
+      console.log("profile user", user);
+      res.status(HTTP_STATUS.OK).json({ success: true, data: user });
+    } catch (error) {
+      console.error("Profile error:", error);
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ message: "Something went wrong." });
+    }
+  }
+
+  async updateProfile(req: Request, res: Response): Promise<void> {
+    try {
+      console.log("reched profile changed");
+      const userId = (req as any).user?.Id;
+      console.log("userId", userId);
+      if (!userId) {
+        res
+          .status(HTTP_STATUS.UNAUTHORIZED)
+          .json({ success: false, message: "Unauthorized" });
+        return;
+      }
+
+      const { firstName, lastName, github, linkedin } = req.body;
+      const profileImage = req.file?.path;
+      console.log("profile ima", profileImage);
+
+      const updatedUser = await this._userService.updateProfile({
+        userId,
+        firstName,
+        lastName,
+        github,
+        linkedin,
+        profileImage,
+      });
+      console.log(updatedUser);
+
+      res.status(HTTP_STATUS.OK).json({ success: true, user: updatedUser });
+    } catch (error: any) {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: error.message || "Something went wrong while updating profile",
+      });
+    }
+  }
+
+  async logout(req: Request, res: Response): Promise<void> {
+    try {
+      res.clearCookie("refresh_token", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+      });
+
+      res
+        .status(HTTP_STATUS.OK)
+        .json({ success: true, message: "Logged out successfully" });
+    } catch (error: any) {
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ success: false, message: error.message || "Logout failed" });
     }
   }
 }

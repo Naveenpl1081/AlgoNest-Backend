@@ -1,0 +1,29 @@
+import express ,{Router} from "express"
+import { container } from "tsyringe";
+import { AuthController } from "../controllers/authController";
+import { RecruiterController } from "../controllers/recruiterController";
+
+
+export class RecruiterRoutes{
+    private router:Router
+
+    constructor(){
+        this.router=express.Router();
+        this.setupRoutes();
+    }
+
+    private setupRoutes(){
+        const recruiterController = container.resolve(RecruiterController);
+        const authController = container.resolve(AuthController);
+        this.router.post("/signup", recruiterController.register.bind(recruiterController));
+        this.router.post("/verify-otp", recruiterController.verifyOtp.bind(recruiterController));
+        this.router.post("/login",recruiterController.login.bind(recruiterController));
+        this.router.post("/resend-otp", recruiterController.resendOtp.bind(recruiterController));
+        this.router.get("/refresh-token",authController.refreshTokenHandler.bind(authController))
+        this.router.post("/check-user", recruiterController.forgotPassword.bind(recruiterController));
+        this.router.post("/reset-password", recruiterController.resetPassword.bind(recruiterController));
+    }
+    public getRouter(): Router {
+        return this.router;
+      }
+}

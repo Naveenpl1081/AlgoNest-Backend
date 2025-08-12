@@ -1,7 +1,17 @@
-// middlewares/AuthMiddleware.ts
 import { Request, Response, NextFunction } from "express";
 import { injectable, inject } from "tsyringe";
+import { Roles } from "../config/roles";
 import { IJwtService } from "../interfaces/IJwt/Ijwt";
+import { HTTP_STATUS } from "../utils/httpStatus";
+
+interface JwtPayload {
+  id: string;
+  role: Roles;
+}
+
+interface AuthenticatedRequest extends Request {
+  user?: JwtPayload;
+}
 
 @injectable()
 export class AuthMiddleware {
@@ -9,21 +19,36 @@ export class AuthMiddleware {
     @inject("IJwtService") private jwtService: IJwtService
   ) {}
 
-  handler = (req: Request, res: Response, next: NextFunction): Response | void => {
+  private getToken(req: Request): string | null {
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized: No token provided" });
+      return null;
     }
+    return authHeader.split(" ")[1];
+  }
 
-    const token = authHeader.split(" ")[1];
-    const decoded = this.jwtService.verifyAccessToken(token);
+  authenticate(requiredRole: Roles) {
+    return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+      try {
+        const token = this.getToken(req);
+        if (!token) {
+          return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Token not provided" });
+        }
 
-    if (!decoded) {
-      return res.status(401).json({ message: "Unauthorized: Invalid token" });
-    }
+        const payload = await this.jwtService.verifyAccessToken(token) as JwtPayload;
 
-    (req as any).user = decoded;
-    next();
-  };
+        if (!payload || payload.role !== requiredRole) {
+          console.log("erorr got it")
+          return res.status(HTTP_STATUS.FORBIDDEN).json({ message: "Invalid role to perform this action" });
+        }
+
+        req.user = payload;
+
+        next();
+      } catch (error) {
+        console.error("Auth error:", error);
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Unauthorized or invalid token" });
+      }
+    };
+  }
 }

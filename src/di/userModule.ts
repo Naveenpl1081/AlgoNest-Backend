@@ -14,6 +14,7 @@ import { OtpRedisService } from "../services/otpRedisService";
 import { IOTPRedis } from "../interfaces/Iredis/IOTPRedis";
 import { JWTService } from "../utils/jwt";
 import { IJwtService } from "../interfaces/IJwt/Ijwt";
+import { AuthMiddleware } from "../middleware/authMiddleware";
 
 container.registerSingleton<IOTPService>("IOTPService", OTPService);
 container.registerSingleton<IUserRepository>("IUserRepository", UserRepository);
@@ -22,3 +23,4 @@ container.registerSingleton<IPasswordHash>("IPasswordHash",PasswordService)
 container.registerSingleton<IEmailService>("IEmailService",EmailService)
 container.registerSingleton<IOTPRedis>("IOTPRedis",OtpRedisService)
 container.registerSingleton<IJwtService>("IJwtService",JWTService)
+container.registerSingleton<AuthMiddleware>(AuthMiddleware, AuthMiddleware);
