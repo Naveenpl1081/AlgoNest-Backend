@@ -1,12 +1,11 @@
 import { Request, Response } from "express";
 import { injectable, inject } from "tsyringe";
-import { IAuthController } from "../interfaces/Icontrollers/IauthController";
 import { JWTService } from "../utils/jwt";
 import { Roles } from "../config/roles";
 import { HTTP_STATUS } from "../utils/httpStatus";
 
 @injectable()
-export class AuthController implements IAuthController {
+export class AuthController {
   constructor(@inject(JWTService) private jwtService: JWTService) {}
 
   async refreshTokenHandler(req: Request, res: Response): Promise<Response> {

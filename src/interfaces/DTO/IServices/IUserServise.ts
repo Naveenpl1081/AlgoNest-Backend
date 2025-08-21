@@ -23,7 +23,7 @@ export interface TempUserResponse {
 export interface LoginResponse {
   success: boolean;
   message: string;
-  data?: Pick<IUser, "username" | "email">;
+  data?: Pick<IUser, "username" | "email" | "isVerified">;
   access_token?:string
   refresh_token?:string
 }
@@ -47,5 +47,14 @@ export interface UpdateProfileDTO {
   github?: string;
   linkedin?: string;
   profileImage?: string ; 
+}
+
+
+export interface FindUsersPaginatedParams {
+  search?: string;
+  limit?: number;
+  skip?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 

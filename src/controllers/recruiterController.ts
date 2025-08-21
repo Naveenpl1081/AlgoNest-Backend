@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import { inject, injectable } from "tsyringe";
-import { IRecuiterController } from "../interfaces/Icontrollers/IrecruiterController";
 import { IRecruiterService } from "../interfaces/Iserveices/IrecruiterService";
 import { HTTP_STATUS } from "../utils/httpStatus";
+import { uploadToCloudinary } from "../utils/cloudinary";
 
 @injectable()
-export class RecruiterController implements IRecuiterController {
+export class RecruiterController {
   constructor(
     @inject("IRecruiterService") private _recruiterService: IRecruiterService
   ) {}
@@ -143,6 +143,50 @@ export class RecruiterController implements IRecuiterController {
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
         .json({ success: false, message: error.message });
+    }
+  }
+
+  async submitDocuments(req: Request, res: Response): Promise<void> {
+    try {
+      const recruiterId = (req as any).user?.Id || (req as any).recruiter?.Id;
+      // ⚠️ use payload.Id (capital I) because your AuthMiddleware sets payload.Id
+      console.log("recruiterId", recruiterId);
+
+      if (!recruiterId) {
+        res.status(401).json({
+          success: false,
+          message: "Unauthorized: Recruiter ID missing in token",
+        });
+        return;
+      }
+
+      const data = req.body;
+      console.log(data);
+
+      let imageUrl: string | undefined;
+      console.log("imageUrl", imageUrl);
+
+      if (req.file) {
+        console.log("File received:", req.file.path);
+        imageUrl = await uploadToCloudinary(req.file.path);
+      }
+
+      const result = await this._recruiterService.saveRecruiterDetails(
+        recruiterId,
+        { ...data, registrationCertificate: imageUrl }
+      );
+
+      res.status(200).json({
+        success: result.success,
+        message: result.message,
+        data: result.data,
+      });
+    } catch (error: any) {
+      console.error("Submit Documents Error:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message || "Failed to submit documents",
+      });
     }
   }
 }

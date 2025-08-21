@@ -20,6 +20,16 @@ import { IEmailService } from "../interfaces/Iserveices/IEmailService";
 import { IOTPRedis } from "../interfaces/Iredis/IOTPRedis";
 import { IJwtService } from "../interfaces/IJwt/Ijwt";
 
+type SortOrder = "asc" | "desc";
+
+export interface GetUsersParams {
+  search?: string;
+  limit?: number;
+  skip?: number;
+  sortBy?: string;
+  sortOrder?: SortOrder;
+}
+
 @injectable()
 export class UserService implements IUserService {
   constructor(
@@ -127,6 +137,15 @@ export class UserService implements IUserService {
       if (!validUser) {
         return {
           message: "User Not Found",
+          success: false,
+        };
+      }
+      console.log("njan ethii");
+      console.log("validuser", validUser);
+      if (validUser.status === "InActive") {
+        console.log("fwevwvrw");
+        return {
+          message: "User Blocked By Admin",
           success: false,
         };
       }
@@ -313,20 +332,59 @@ export class UserService implements IUserService {
     }
   }
 
-  async getAllUsers(): Promise<AdminUserListResponse> {
+  async getAllUsers(options: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data?: {
+      users: IUser[];
+      pagination: {
+        total: number;
+        page: number;
+        pages: number;
+        limit: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+      };
+    };
+  }> {
     try {
-      const users = await this._userRepository.findAllUsers();
+      console.log("Function fetching all the users");
+      const page = options.page || 1;
+      const limit = options.limit || 5;
+      const result = await this._userRepository.getAllUsers({
+        page,
+        limit,
+        search: options.search,
+        status: options.status,
+      });
+
+      console.log("result from the user service:", result);
 
       return {
         success: true,
         message: "Users fetched successfully",
-        users,
+        data: {
+          users: result.data,
+          pagination: {
+            total: result.total,
+            page: result.page,
+            pages: result.pages,
+            limit: limit,
+            hasNextPage: result.page < result.pages,
+            hasPrevPage: page > 1,
+          },
+        },
       };
     } catch (error) {
-      console.error("Error in AdminService.getAllUsers:", error);
+      console.error("Error fetching users:", error);
       return {
         success: false,
-        message: "Failed to retrieve users",
+        message: "Something went wrong while fetching users",
       };
     }
   }
@@ -335,10 +393,12 @@ export class UserService implements IUserService {
       const user = await this._userRepository.findById(userId);
       const newStatus: "Active" | "InActive" =
         user.status === "Active" ? "InActive" : "Active";
+      console.log("userstauts", newStatus);
       const updatedUser = await this._userRepository.findUserAndUpdate(
         userId,
         newStatus
       );
+      console.log("updateuser", updatedUser);
       return updatedUser;
     } catch (error) {
       console.log("error occured:", error);
