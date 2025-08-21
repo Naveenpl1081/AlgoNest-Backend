@@ -17,11 +17,28 @@ const RecruiterSchema:Schema<IRecruiter>=new Schema({
     },
     isVerified: {
         type: Boolean,
-        default: false
       },
+    emailVerify:{
+        type:Boolean,
+    }  ,
+    companyName:{
+        type:String
+    },
+    companyType:{
+        type:String
+    },
+    yearEstablished:{
+        type:String
+    },
+    phone:{
+        type:Number
+    },
+    registrationCertificate:{
+        type:String
+    },
     status:{
         type:String,
-        enum:["Active","InActive"]
+        enum:["Active","InActive","pending"]
     }
 },{ timestamps : true }
 );

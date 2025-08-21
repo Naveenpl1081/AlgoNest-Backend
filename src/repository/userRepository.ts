@@ -3,6 +3,7 @@ import { IUserRepository } from "../interfaces/Irepositories/IuserRepository";
 import { IUser } from "../interfaces/models/Iuser";
 import User from "../models/userSchema";
 import { BaseRepository } from "./baseRepository";
+import { FilterQuery } from "mongoose";
 
 @injectable()
 export class UserRepository
@@ -55,17 +56,64 @@ export class UserRepository
     }
   }
 
-  async findAllUsers(): Promise<IUser[]> {
+  async getAllUsers(options: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  }): Promise<{
+    data: IUser[];
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  }> {
     try {
-      console.log("Fetching all users from DB");
-      const users = await User.find({}, { password: 0 }).lean();
-      return users;
+      console.log("entering the function which fetches all the users");
+      const page = options.page || 1;
+      const limit = options.limit || 6;
+
+      const filter: FilterQuery<IUser> = {};
+
+      if (options.search) {
+        filter.$or = [
+          { username: { $regex: options.search, $options: "i" } },
+          { email: { $regex: options.search, $options: "i" } },
+        ];
+      }
+
+      if (options.status) {
+        if (options.status === "active") {
+          filter.status = "Active";
+        } else if (options.status === "blocked") {
+          filter.status = "InActive";
+        }
+      }
+
+      console.log("filter",filter)
+
+      const result = (await this.find(filter, {
+        pagination: { page, limit },
+        sort: { createdAt: -1 },
+      })) as { data: IUser[]; total: number };
+
+      console.log("data fetched from the user repository:", result);
+
+      return {
+        data: result.data,
+        total: result.total,
+        page,
+        limit,
+        pages: Math.ceil(result.total / limit),
+      };
     } catch (error) {
-      console.error("Error fetching users:", error);
-      throw new Error("Failed to retrieve users from database");
+      console.log("error occurred while fetching the users:", error);
+      throw new Error("Failed to fetch the users");
     }
   }
 
+
+  
   async findUserAndUpdate(
     userId: string,
     status: "Active" | "InActive"

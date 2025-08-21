@@ -1,11 +1,10 @@
 import { Request, Response } from "express";
 import { IUserService } from "../interfaces/Iserveices/IuserService";
-import { IUserController } from "../interfaces/Icontrollers/IuserController";
 import { injectable, inject } from "tsyringe";
 import { HTTP_STATUS } from "../utils/httpStatus";
 
 @injectable()
-export class UserController implements IUserController {
+export class UserController{
   constructor(@inject("IUserService") private _userService: IUserService) {}
 
   async register(req: Request, res: Response): Promise<void> {

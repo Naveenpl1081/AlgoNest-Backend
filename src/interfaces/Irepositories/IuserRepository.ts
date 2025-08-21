@@ -8,9 +8,20 @@ export interface IUserRepository {
     id: string,
     updateData: Partial<IUser>
   ): Promise<IUser | null>;
-  findAllUsers(): Promise<IUser[]>;
   findUserAndUpdate(
     userId: string,
     status: "Active" | "InActive"
   ): Promise<IUser | null>;
+  getAllUsers(options: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  }): Promise<{
+    data: IUser[];
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  }> 
 }

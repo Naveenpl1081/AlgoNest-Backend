@@ -13,5 +13,6 @@ export interface IUser extends Document {
   status?: string
   createdAt?: Date;
   updatedAt?: Date;
+  isVerified?:Boolean
 }
 

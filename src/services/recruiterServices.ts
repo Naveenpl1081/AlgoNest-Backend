@@ -1,12 +1,16 @@
 import { OtpPurpose, TEMP_USER_EXPIRY_SECONDS } from "../config/otpConfig";
+import Recruiter from "../models/recruiterSchema";
 
 import { Roles } from "../config/roles";
 import {
   LoginUserData,
   SignupUserData,
   TempUserResponse,
-  LoginResponse,
 } from "../interfaces/DTO/IServices/IUserServise";
+import {
+  LoginRecruiterResponse,
+  submitQualificationData,
+} from "../interfaces/DTO/IServices/IRecruiterService";
 import { inject, injectable } from "tsyringe";
 import { IRecruiterRepository } from "../interfaces/Irepositories/IrecruiterRepository";
 import { IPasswordHash } from "../interfaces/IpasswordHash/IpasswordHash";
@@ -15,16 +19,19 @@ import { IEmailService } from "../interfaces/Iserveices/IEmailService";
 import { IOTPRedis } from "../interfaces/Iredis/IOTPRedis";
 import { IJwtService } from "../interfaces/IJwt/Ijwt";
 import { IRecruiterService } from "../interfaces/Iserveices/IrecruiterService";
+import { IRecruiter } from "../interfaces/models/Irecruiter";
+import { IApplicants } from "../interfaces/models/Irecruiter";
 
 @injectable()
 export class RecruiterService implements IRecruiterService {
   constructor(
-    @inject("IRecruiterRepository") private _recruiterRepository: IRecruiterRepository,
+    @inject("IRecruiterRepository")
+    private _recruiterRepository: IRecruiterRepository,
     @inject("IPasswordHash") private _passwordService: IPasswordHash,
     @inject("IOTPService") private _otpService: IOTPService,
     @inject("IEmailService") private _emailService: IEmailService,
     @inject("IOTPRedis") private _otpRedisService: IOTPRedis,
-    @inject("IJwtService") private _jwtService:IJwtService
+    @inject("IJwtService") private _jwtService: IJwtService
   ) {}
 
   private async generateAndSendOtp(
@@ -96,11 +103,12 @@ export class RecruiterService implements IRecruiterService {
 
     const { username, password } = data;
 
-    if(data.purpose!=="FORGOT_PASSWORD"){
+    if (data.purpose !== "FORGOT_PASSWORD") {
       await this._recruiterRepository.createRecruiter({
         username,
         email,
         password,
+        emailVerify: true,
       });
     }
 
@@ -115,7 +123,7 @@ export class RecruiterService implements IRecruiterService {
     return { success: true, message: "Recruiter created successfully" };
   }
 
-  async recruiterLogin(data: LoginUserData): Promise<LoginResponse> {
+  async recruiterLogin(data: LoginUserData): Promise<LoginRecruiterResponse> {
     try {
       const { email, password } = data;
 
@@ -126,7 +134,14 @@ export class RecruiterService implements IRecruiterService {
           success: false,
         };
       }
-      console.log("validuser",validUser)
+      console.log("validuser", validUser);
+      if (validUser.status === "InActive") {
+        console.log("fwevwvrw");
+        return {
+          message: "User Blocked By Admin",
+          success: false,
+        };
+      }
 
       const isPasswordValid = await this._passwordService.verify(
         validUser.password,
@@ -139,21 +154,27 @@ export class RecruiterService implements IRecruiterService {
           success: false,
         };
       }
-      const userId=String(validUser._id)
+      const userId = String(validUser._id);
       const access_token = this._jwtService.generateAccessToken(
         userId,
         Roles.RECRUITER
       );
-      const refresh_token = this._jwtService.generateRefreshToken(String(userId),Roles.RECRUITER);
-      
-      console.log(refresh_token)
-  
+      const refresh_token = this._jwtService.generateRefreshToken(
+        String(userId),
+        Roles.RECRUITER
+      );
+
+      console.log(refresh_token);
+
       return {
         success: true,
         message: "Login Successful",
         data: {
           username: validUser.username,
           email: validUser.email,
+          isVerified: validUser.isVerified,
+          status: validUser.status,
+          emailVerify: validUser.emailVerify,
         },
         access_token,
         refresh_token,
@@ -167,28 +188,31 @@ export class RecruiterService implements IRecruiterService {
     }
   }
 
-  async resendOtp(email: string): Promise<{ success: boolean; message: string }> {
+  async resendOtp(
+    email: string
+  ): Promise<{ success: boolean; message: string }> {
     try {
-   
       let redisData = await this._otpRedisService.getOTP(email);
-  
-      
+
       if (!redisData) {
         redisData = await this._otpRedisService.getBackupData(email);
         if (!redisData) {
           return {
             success: false,
-            message: "Your OTP has expired and no data is found. Please sign up again.",
+            message:
+              "Your OTP has expired and no data is found. Please sign up again.",
           };
         }
       }
-  
-      
+
       const otp = await this.generateAndSendOtp(email, OtpPurpose.REGISTRATION);
-  
-     
-      await this._otpRedisService.setOTP(email, { ...redisData, otp }, TEMP_USER_EXPIRY_SECONDS);
-  
+
+      await this._otpRedisService.setOTP(
+        email,
+        { ...redisData, otp },
+        TEMP_USER_EXPIRY_SECONDS
+      );
+
       return {
         success: true,
         message: "OTP resent successfully!",
@@ -201,36 +225,46 @@ export class RecruiterService implements IRecruiterService {
       };
     }
   }
-  
-  
-  async forgotPassword(email: string): Promise<{ success: boolean; message: string; email?: string }> {
+
+  async forgotPassword(
+    email: string
+  ): Promise<{ success: boolean; message: string; email?: string }> {
     try {
       const user = await this._recruiterRepository.findByEmail(email);
       console.log("Recruiter service", user);
-  
+
       if (!user) {
         return { success: false, message: "Recruiter not found." };
       }
-  
-      const otp = await this.generateAndSendOtp(email, OtpPurpose.FORGOT_PASSWORD);
-  
+
+      const otp = await this.generateAndSendOtp(
+        email,
+        OtpPurpose.FORGOT_PASSWORD
+      );
+
       const redisPayload = {
         email,
         otp,
         purpose: OtpPurpose.FORGOT_PASSWORD,
       };
-  
-      await this._otpRedisService.setOTP(email, redisPayload, TEMP_USER_EXPIRY_SECONDS);
-  
+
+      await this._otpRedisService.setOTP(
+        email,
+        redisPayload,
+        TEMP_USER_EXPIRY_SECONDS
+      );
+
       return { success: true, message: "OTP sent to your email.", email };
     } catch (error) {
       console.error("ForgotPassword Error:", error);
       return { success: false, message: "Something went wrong." };
     }
   }
-  
 
-  async resetPassword(email: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+  async resetPassword(
+    email: string,
+    newPassword: string
+  ): Promise<{ success: boolean; message: string }> {
     try {
       const user = await this._recruiterRepository.findByEmail(email);
       if (!user) {
@@ -242,6 +276,207 @@ export class RecruiterService implements IRecruiterService {
       return { success: true, message: "Password updated successfully." };
     } catch (error) {
       return { success: false, message: "Failed to update password." };
+    }
+  }
+  async saveRecruiterDetails(
+    recruiterId: string,
+    data: submitQualificationData & { profileImage?: string }
+  ): Promise<{
+    success: boolean;
+    message: string;
+    data?: {
+      isVerified?: boolean;
+      emailVerify?: boolean;
+      status?: string;
+    };
+  }> {
+    try {
+      const recruiter = await this._recruiterRepository.updateRecruiterDetails(
+        recruiterId,
+        {
+          ...data,
+          isVerified: false,
+          status: "Pending",
+        }
+      );
+
+      console.log("recruiter", recruiter);
+
+      if (!recruiter) {
+        return {
+          message: "failed to update the recruiter",
+          success: false,
+        };
+      }
+
+      return {
+        success: true,
+        message: "Documents submitted. It will take 24 hours for verification.",
+        data: {
+          isVerified: recruiter.isVerified,
+          emailVerify: recruiter.emailVerify,
+          status: recruiter.status,
+        },
+      };
+    } catch (error) {
+      console.error("Error saving recruiter details:", error);
+      throw new Error("Unable to save recruiter details");
+    }
+  }
+
+  async getAllRecruiters(options: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data?: {
+      users: IRecruiter[];
+      pagination: {
+        total: number;
+        page: number;
+        pages: number;
+        limit: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+      };
+    };
+  }> {
+    try {
+      console.log("Function fetching all the users");
+      const page = options.page || 1;
+      const limit = options.limit || 5;
+      const result = await this._recruiterRepository.getAllRecruiters({
+        page,
+        limit,
+        search: options.search,
+        status: options.status,
+      });
+
+      console.log("result from the user service:", result);
+
+      return {
+        success: true,
+        message: "Users fetched successfully",
+        data: {
+          users: result.data,
+          pagination: {
+            total: result.total,
+            page: result.page,
+            pages: result.pages,
+            limit: limit,
+            hasNextPage: result.page < result.pages,
+            hasPrevPage: page > 1,
+          },
+        },
+      };
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      return {
+        success: false,
+        message: "Something went wrong while fetching users",
+      };
+    }
+  }
+
+  async findOneRecruiter(recruiterId: string): Promise<IRecruiter | null> {
+    try {
+      const recruiter = await this._recruiterRepository.findById(recruiterId);
+      if (!recruiter) {
+        return null;
+      }
+      const newStatus: "Active" | "InActive" =
+        recruiter.status === "Active" ? "InActive" : "Active";
+      console.log("userstauts", newStatus);
+      const updatedUser =
+        await this._recruiterRepository.findRecruiterAndUpdate(
+          recruiterId,
+          newStatus
+        );
+      console.log("updateuser", updatedUser);
+      return updatedUser;
+    } catch (error) {
+      console.log("error occured:", error);
+      return null;
+    }
+  }
+
+  async getAllApplicants(options: { page?: number; limit?: number }): Promise<{
+    success: boolean;
+    message: string;
+    data?: {
+      users: IApplicants[];
+      pagination: {
+        total: number;
+        page: number;
+        pages: number;
+        limit: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+      };
+    };
+  }> {
+    try {
+      console.log("Function fetching all the users");
+      const page = options.page || 1;
+      const limit = options.limit || 5;
+      const result = await this._recruiterRepository.getAllApplicants({
+        page,
+        limit,
+      });
+      console.log("result from the user service:", result);
+
+      return {
+        success: true,
+        message: "Users fetched successfully",
+        data: {
+          users: result.data,
+          pagination: {
+            total: result.total,
+            page: result.page,
+            pages: result.pages,
+            limit: limit,
+            hasNextPage: result.page < result.pages,
+            hasPrevPage: page > 1,
+          },
+        },
+      };
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      return {
+        success: false,
+        message: "Something went wrong while fetching users",
+      };
+    }
+  }
+  async acceptApplicant(
+    applicantId: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const updatedResult =
+        await this._recruiterRepository.updateRecruiterDetails(applicantId, {
+          isVerified: true,
+          status: "Active",
+        });
+
+        if(!updatedResult){
+          return {
+            success:false,
+            message:"can not fetch the recruiter"
+          }
+        }
+
+        return {
+          success:true,
+          message:"Approved successfully done"
+        }
+
+
+    } catch (error) {
+      console.error("Error saving recruiter details:", error);
+      throw new Error("Unable to save recruiter details");
     }
   }
 }
