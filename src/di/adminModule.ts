@@ -8,9 +8,10 @@ import { IJwtService } from "../interfaces/IJwt/Ijwt";
 import { IAdminRepository } from "../interfaces/Irepositories/IadminRepository";
 import { AdminRepository } from "../repository/adminRepository";
 
-
-
-container.registerSingleton<IAdminService>("IAdminService",AdminService)
-container.registerSingleton<IPasswordHash>("IPasswordHash",PasswordService)
-container.registerSingleton<IJwtService>("IJwtService",JWTService)
-container.registerSingleton<IAdminRepository>("IAdminRepository",AdminRepository)
+container.registerSingleton<IAdminService>("IAdminService", AdminService);
+container.registerSingleton<IPasswordHash>("IPasswordHash", PasswordService);
+container.registerSingleton<IJwtService>("IJwtService", JWTService);
+container.registerSingleton<IAdminRepository>(
+  "IAdminRepository",
+  AdminRepository
+);

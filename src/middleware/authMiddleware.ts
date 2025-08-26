@@ -19,8 +19,9 @@ interface AuthenticatedRequest extends Request {
 export class AuthMiddleware {
   constructor(
     @inject("IJwtService") private _jwtService: IJwtService,
-    @inject("IUserRepository") private _userRepository:IUserRepository,
-    @inject("IRecruiterRepository") private _recruiterRepository:IRecruiterRepository
+    @inject("IUserRepository") private _userRepository: IUserRepository,
+    @inject("IRecruiterRepository")
+    private _recruiterRepository: IRecruiterRepository
   ) {}
 
   private getToken(req: Request): string | null {
@@ -32,37 +33,48 @@ export class AuthMiddleware {
   }
 
   authenticate(requiredRole: Roles) {
-    return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    return async (
+      req: AuthenticatedRequest,
+      res: Response,
+      next: NextFunction
+    ) => {
       try {
         const token = this.getToken(req);
-        console.log("token",token)
+        console.log("token", token);
         if (!token) {
-          return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Token not provided" });
+          return res
+            .status(HTTP_STATUS.UNAUTHORIZED)
+            .json({ message: "Token not provided" });
         }
 
-        const payload = await this._jwtService.verifyAccessToken(token) as JwtPayload;
-        console.log("payload",payload.Id)
+        console.log("requiredRole", requiredRole);
 
+        const payload = (await this._jwtService.verifyAccessToken(
+          token
+        )) as JwtPayload;
+        console.log("payload", payload);
 
-        if(requiredRole==Roles.USER){
-          const user=await this._userRepository.findById(payload.Id)
-          console.log("user",user)
-          if(user.status==="InActive"){
-            console.log("helloooooo")
-            return res.status(HTTP_STATUS.FORBIDDEN).json({message:"user blocked by admin"})
+        if (requiredRole == Roles.USER) {
+          const user = await this._userRepository.findById(payload.Id);
+          console.log("user", user);
+          if (user.status === "InActive") {
+            return res
+              .status(HTTP_STATUS.FORBIDDEN)
+              .json({ message: "user blocked by admin" });
           }
-        }else{
-          const recruiter = await this._recruiterRepository.findById(payload.Id);
+        } else {
+          const recruiter = await this._recruiterRepository.findById(
+            payload.Id
+          );
           console.log("recruiter", recruiter);
-          
+
           if (!recruiter) {
             return res.status(HTTP_STATUS.UNAUTHORIZED).json({
               message: "Recruiter not found",
             });
           }
-          
+
           if (recruiter.status === "InActive") {
-            console.log("helloooooo");
             return res
               .status(HTTP_STATUS.FORBIDDEN)
               .json({ message: "User blocked by admin" });
@@ -70,8 +82,10 @@ export class AuthMiddleware {
         }
 
         if (!payload || payload.role !== requiredRole) {
-          console.log("erorr got it")
-          return res.status(HTTP_STATUS.FORBIDDEN).json({ message: "Invalid role to perform this action" });
+          console.log("erorr got it");
+          return res
+            .status(HTTP_STATUS.FORBIDDEN)
+            .json({ message: "Invalid role to perform this action" });
         }
 
         req.user = payload;
@@ -79,7 +93,9 @@ export class AuthMiddleware {
         next();
       } catch (error) {
         console.error("Auth error:", error);
-        return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Unauthorized or invalid token" });
+        return res
+          .status(HTTP_STATUS.UNAUTHORIZED)
+          .json({ message: "Unauthorized or invalid token" });
       }
     };
   }

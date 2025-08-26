@@ -1,12 +1,10 @@
 import transporter from "../config/mailTransporter";
-import { OtpPurpose } from "../config/otpConfig"; 
-import {SendEmailOptions} from '../interfaces/DTO/IServices/IUserServise'
+import { OtpPurpose } from "../config/otpConfig";
+import { SendEmailOptions } from "../interfaces/DTO/IServices/IUserServise";
 import { IEmailService } from "../interfaces/Iserveices/IEmailService";
 
-
-
-export class EmailService implements IEmailService{
-   async sendMail(options: SendEmailOptions): Promise<void> {
+export class EmailService implements IEmailService {
+  async sendMail(options: SendEmailOptions): Promise<void> {
     try {
       await transporter.sendMail({
         from: `"AlgoNest" <${process.env.EMAIL_USER}>`,
@@ -22,14 +20,19 @@ export class EmailService implements IEmailService{
     }
   }
 
-   async sendOtpEmail(to: string, otp: string, purpose: OtpPurpose): Promise<void> {
+  async sendOtpEmail(
+    to: string,
+    otp: string,
+    purpose: OtpPurpose
+  ): Promise<void> {
     let subject = "Your OTP Code";
     let message = "";
 
     switch (purpose) {
       case OtpPurpose.REGISTRATION:
         subject = "Verify Your Email for AlgoNest Signup";
-        message = "You're almost there! Use the OTP below to complete your registration.";
+        message =
+          "You're almost there! Use the OTP below to complete your registration.";
         break;
 
       case OtpPurpose.PASSWORD_RESET:

@@ -3,6 +3,8 @@ import { inject, injectable } from "tsyringe";
 import { IRecruiterService } from "../interfaces/Iserveices/IrecruiterService";
 import { HTTP_STATUS } from "../utils/httpStatus";
 import { uploadToCloudinary } from "../utils/cloudinary";
+import dotenv from "dotenv";
+dotenv.config();
 
 @injectable()
 export class RecruiterController {
@@ -67,7 +69,7 @@ export class RecruiterController {
           httpOnly: true,
           secure: true,
           sameSite: "strict",
-          maxAge: 3 * 24 * 60 * 60 * 1000,
+          maxAge: Number(process.env.COOKIE_MAX_AGE),
         });
 
         res.status(200).json({
@@ -149,7 +151,7 @@ export class RecruiterController {
   async submitDocuments(req: Request, res: Response): Promise<void> {
     try {
       const recruiterId = (req as any).user?.Id || (req as any).recruiter?.Id;
-      // ⚠️ use payload.Id (capital I) because your AuthMiddleware sets payload.Id
+
       console.log("recruiterId", recruiterId);
 
       if (!recruiterId) {
@@ -187,6 +189,48 @@ export class RecruiterController {
         success: false,
         message: error.message || "Failed to submit documents",
       });
+    }
+  }
+
+  async profile(req: Request, res: Response): Promise<void> {
+    try {
+      console.log("Reached recruiter profile");
+      const recruiterId = (req as any).user?.Id;
+
+      if (!recruiterId) {
+        res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json({ message: "Recruiter ID missing from token." });
+        return;
+      }
+
+      const recruiter = await this._recruiterService.getRecruiterProfile(
+        recruiterId
+      );
+
+      res.status(HTTP_STATUS.OK).json({ success: true, data: recruiter });
+    } catch (error) {
+      console.error("Recruiter profile error:", error);
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ message: "Something went wrong." });
+    }
+  }
+  async logout(req: Request, res: Response): Promise<void> {
+    try {
+      res.clearCookie("refresh_token", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+      });
+
+      res
+        .status(HTTP_STATUS.OK)
+        .json({ success: true, message: "Logged out successfully" });
+    } catch (error: any) {
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ success: false, message: error.message || "Logout failed" });
     }
   }
 }

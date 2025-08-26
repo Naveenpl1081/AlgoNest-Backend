@@ -1,5 +1,5 @@
 import { OtpPurpose, TEMP_USER_EXPIRY_SECONDS } from "../config/otpConfig";
-import Recruiter from "../models/recruiterSchema";
+import { SendEmailOptions } from "../interfaces/DTO/IServices/IUserServise";
 
 import { Roles } from "../config/roles";
 import {
@@ -79,6 +79,7 @@ export class RecruiterService implements IRecruiterService {
         message: "OTP sent successfully",
       };
     } catch (error) {
+      console.error(error);
       return {
         message: "failed to create Recruiter",
         success: false,
@@ -136,7 +137,6 @@ export class RecruiterService implements IRecruiterService {
       }
       console.log("validuser", validUser);
       if (validUser.status === "InActive") {
-        console.log("fwevwvrw");
         return {
           message: "User Blocked By Admin",
           success: false,
@@ -275,6 +275,7 @@ export class RecruiterService implements IRecruiterService {
       await user.save();
       return { success: true, message: "Password updated successfully." };
     } catch (error) {
+      console.error(error);
       return { success: false, message: "Failed to update password." };
     }
   }
@@ -398,7 +399,7 @@ export class RecruiterService implements IRecruiterService {
       console.log("updateuser", updatedUser);
       return updatedUser;
     } catch (error) {
-      console.log("error occured:", error);
+      console.error("error occured:", error);
       return null;
     }
   }
@@ -461,22 +462,79 @@ export class RecruiterService implements IRecruiterService {
           status: "Active",
         });
 
-        if(!updatedResult){
-          return {
-            success:false,
-            message:"can not fetch the recruiter"
-          }
-        }
-
+      if (!updatedResult) {
         return {
-          success:true,
-          message:"Approved successfully done"
-        }
+          success: false,
+          message: "can not fetch the recruiter",
+        };
+      }
 
-
+      return {
+        success: true,
+        message: "Approved successfully done",
+      };
     } catch (error) {
       console.error("Error saving recruiter details:", error);
       throw new Error("Unable to save recruiter details");
     }
+  }
+
+  async rejectApplicant(
+    applicantId: string,
+    data: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      console.log("enterd the reject service");
+      const updatedResult =
+        await this._recruiterRepository.updateRecruiterDetails(applicantId, {
+          isVerified: false,
+          status: "Reject",
+        });
+
+      if (!updatedResult) {
+        return {
+          success: false,
+          message: "can not fetch the recruiter",
+        };
+      }
+
+      const emailOptions: SendEmailOptions = {
+        to: updatedResult.email,
+        subject: "Application Rejection Notice",
+        text: data,
+        html: `<p>${data}</p>`,
+      };
+
+      await this._emailService.sendMail(emailOptions);
+
+      return {
+        success: true,
+        message: "Rejected successfully done",
+      };
+    } catch (error) {
+      console.error("Error saving recruiter details:", error);
+      throw new Error("Unable to save recruiter details");
+    }
+  }
+
+  async getRecruiterProfile(recruiterId: string): Promise<Partial<IRecruiter>> {
+    console.log("Recruiter profile service reached");
+    const recruiter = await this._recruiterRepository.findById(recruiterId);
+
+    if (!recruiter) {
+      throw new Error("Recruiter not found");
+    }
+    return {
+      username: recruiter.username,
+      email: recruiter.email,
+      phone: recruiter.phone,
+      companyName: recruiter.companyName,
+      companyType: recruiter.companyType,
+      yearEstablished: recruiter.yearEstablished,
+      isVerified: recruiter.isVerified,
+      registrationCertificate: recruiter.registrationCertificate,
+      status: recruiter.status,
+      createdAt: recruiter.createdAt,
+    };
   }
 }

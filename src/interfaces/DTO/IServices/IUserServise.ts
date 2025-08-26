@@ -23,7 +23,7 @@ export interface TempUserResponse {
 export interface LoginResponse {
   success: boolean;
   message: string;
-  data?: Pick<IUser, "username" | "email" | "isVerified">;
+  data?: Pick<IUser, "username" | "email" | "isVerified" |"github">;
   access_token?:string
   refresh_token?:string
 }

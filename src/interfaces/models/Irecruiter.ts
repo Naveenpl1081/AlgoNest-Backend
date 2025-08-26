@@ -7,7 +7,7 @@ export interface IRecruiter extends Document {
   password: string;
   isVerified?: boolean;
   emailVerify?: boolean;
-  status?: "Active" | "InActive" | "Pending";
+  status?: "Active" | "InActive" | "Pending" |"Reject";
   companyName?: string;
   companyType?: string;
   yearEstablished?: string;
