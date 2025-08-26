@@ -45,4 +45,6 @@ export interface IUserService {
     };
   }>;
   findOneUser(userId: string): Promise<IUser | null>;
+  githubLogin(code: string): Promise<LoginResponse>
+  linkedinLogin(code: string): Promise<LoginResponse>
 }

@@ -21,7 +21,7 @@ export class UserRepository
       console.log("userData", userData);
       return userData;
     } catch (error) {
-      console.log("error occurred while fetching the user");
+      console.error("error occurred while fetching the user", error);
       throw new Error("An error occurred while retrieving the user");
     }
   }
@@ -31,7 +31,7 @@ export class UserRepository
       const user = await this.create(userData);
       return user;
     } catch (error) {
-      console.log("error occurred while creating the user");
+      console.error("error occurred while creating the user", error);
       throw new Error("An error occurred while creating the user");
     }
   }
@@ -71,7 +71,7 @@ export class UserRepository
     try {
       console.log("entering the function which fetches all the users");
       const page = options.page || 1;
-      const limit = options.limit || 6;
+      const limit = options.limit || 5;
 
       const filter: FilterQuery<IUser> = {};
 
@@ -90,7 +90,7 @@ export class UserRepository
         }
       }
 
-      console.log("filter",filter)
+      console.log("filter", filter);
 
       const result = (await this.find(filter, {
         pagination: { page, limit },
@@ -107,13 +107,11 @@ export class UserRepository
         pages: Math.ceil(result.total / limit),
       };
     } catch (error) {
-      console.log("error occurred while fetching the users:", error);
+      console.error("error occurred while fetching the users:", error);
       throw new Error("Failed to fetch the users");
     }
   }
 
-
-  
   async findUserAndUpdate(
     userId: string,
     status: "Active" | "InActive"
@@ -126,6 +124,7 @@ export class UserRepository
       );
       return user;
     } catch (error) {
+      console.error(error);
       return null;
     }
   }

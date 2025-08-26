@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { injectable, inject } from "tsyringe";
 import { JWTService } from "../utils/jwt";
-import { Roles } from "../config/roles";
 import { HTTP_STATUS } from "../utils/httpStatus";
 
 @injectable()

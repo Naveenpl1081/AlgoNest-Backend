@@ -1,4 +1,4 @@
-import "reflect-metadata"
+import "reflect-metadata";
 import { container } from "tsyringe";
 import { IOTPService } from "../interfaces/Iotp/IOTP";
 import { IRecruiterRepository } from "../interfaces/Irepositories/IrecruiterRepository";
@@ -15,10 +15,16 @@ import { EmailService } from "../services/emailService";
 import { IJwtService } from "../interfaces/IJwt/Ijwt";
 import { JWTService } from "../utils/jwt";
 
-container.registerSingleton<IRecruiterService>("IRecruiterService",RecruiterService)
-container.registerSingleton<IRecruiterRepository>("IRecruiterRepository",RecruiterRepository)
-container.registerSingleton<IOTPService>("IOTPService",OTPService)
-container.registerSingleton<IPasswordHash>("IPasswordHash",PasswordService)
-container.registerSingleton<IEmailService>("IEmailService",EmailService)
-container.registerSingleton<IOTPRedis>("IOTPRedis",OtpRedisService)
-container.registerSingleton<IJwtService>("IJwtService",JWTService)
+container.registerSingleton<IRecruiterService>(
+  "IRecruiterService",
+  RecruiterService
+);
+container.registerSingleton<IRecruiterRepository>(
+  "IRecruiterRepository",
+  RecruiterRepository
+);
+container.registerSingleton<IOTPService>("IOTPService", OTPService);
+container.registerSingleton<IPasswordHash>("IPasswordHash", PasswordService);
+container.registerSingleton<IEmailService>("IEmailService", EmailService);
+container.registerSingleton<IOTPRedis>("IOTPRedis", OtpRedisService);
+container.registerSingleton<IJwtService>("IJwtService", JWTService);

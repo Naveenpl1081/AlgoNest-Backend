@@ -38,7 +38,7 @@ const RecruiterSchema:Schema<IRecruiter>=new Schema({
     },
     status:{
         type:String,
-        enum:["Active","InActive","pending"]
+        enum:["Active","InActive","pending","reject"]
     }
 },{ timestamps : true }
 );

@@ -1,19 +1,22 @@
 import { Request, Response } from "express";
 import { injectable, inject } from "tsyringe";
-import { AdminService } from "../services/adminServices";
 import { IAdminService } from "../interfaces/Iserveices/IadminService";
 import { IUserService } from "../interfaces/Iserveices/IuserService";
 import { HTTP_STATUS } from "../utils/httpStatus";
-import { createSuccessResponse,createErrorResponse } from "../utils/responseHelper";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+} from "../utils/responseHelper";
 import { IRecruiterService } from "../interfaces/Iserveices/IrecruiterService";
-
+import dotenv from "dotenv";
+dotenv.config();
 
 @injectable()
-export class AdminController{
+export class AdminController {
   constructor(
     @inject("IAdminService") private _adminService: IAdminService,
     @inject("IUserService") private _userService: IUserService,
-    @inject("IRecruiterService") private _recruiterService:IRecruiterService
+    @inject("IRecruiterService") private _recruiterService: IRecruiterService
   ) {}
 
   async login(req: Request, res: Response): Promise<void> {
@@ -22,14 +25,14 @@ export class AdminController{
       const { email, password } = req.body;
 
       const result = await this._adminService.loginAdmin(email, password);
-      console.log("adminresult", result);
+      console.log("admin result", result);
 
       if (result.success) {
         res.cookie("refresh_token", result.refresh_token, {
           httpOnly: true,
           secure: true,
           sameSite: "strict",
-          maxAge: 7 * 24 * 60 * 60 * 1000,
+          maxAge: Number(process.env.COOKIE_MAX_AGE),
         });
 
         res.status(HTTP_STATUS.OK).json({
@@ -38,7 +41,6 @@ export class AdminController{
           access_token: result.access_token,
         });
       } else {
-        console.log("entrd");
         res.status(HTTP_STATUS.CONFLICT).json({
           success: false,
           message: result.message,
@@ -61,7 +63,7 @@ export class AdminController{
       const search = (req.query.search as string) || undefined;
       const status = (req.query.status as string) || undefined;
 
-      console.log("status,",status)
+      console.log("status,", status);
 
       const serviceResponse = await this._userService.getAllUsers({
         page,
@@ -134,7 +136,7 @@ export class AdminController{
       const search = (req.query.search as string) || undefined;
       const status = (req.query.status as string) || undefined;
 
-      console.log("status,",status)
+      console.log("status,", status);
 
       const serviceResponse = await this._recruiterService.getAllRecruiters({
         page,
@@ -171,18 +173,22 @@ export class AdminController{
     }
   }
 
-  async getAllApplicants(req:Request,res:Response):Promise<void>{
+  async getAllApplicants(req: Request, res: Response): Promise<void> {
     try {
-      console.log("enterd into getapplicationslist")
-      const page=req.query.page?parseInt(req.query.page as string):undefined
-      const limit=req.query.limit?parseInt(req.query.limit as string):undefined
+      console.log("enterd into getapplicationslist");
+      const page = req.query.page
+        ? parseInt(req.query.page as string)
+        : undefined;
+      const limit = req.query.limit
+        ? parseInt(req.query.limit as string)
+        : undefined;
 
       const serviceResponse = await this._recruiterService.getAllApplicants({
         page,
-        limit
+        limit,
       });
 
-      console.log("serviceResponse",serviceResponse)
+      console.log("serviceResponse", serviceResponse);
       if (serviceResponse.success) {
         res
           .status(HTTP_STATUS.OK)
@@ -198,9 +204,8 @@ export class AdminController{
             )
           );
       }
-
     } catch (error) {
-      
+      console.error(error);
     }
   }
 
@@ -209,7 +214,9 @@ export class AdminController{
       console.log("enterdddd");
       const recruiterId = req.params.id;
       console.log("userId,", recruiterId);
-      const response = await this._recruiterService.findOneRecruiter(recruiterId);
+      const response = await this._recruiterService.findOneRecruiter(
+        recruiterId
+      );
 
       if (!response) {
         res.status(HTTP_STATUS.NOT_FOUND).json({
@@ -245,22 +252,38 @@ export class AdminController{
         .status(HTTP_STATUS.OK)
         .json({ success: true, message: "Logged out successfully" });
     } catch (error: any) {
+      console.error(error);
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
         .json({ success: false, message: error.message || "Logout failed" });
     }
   }
-  async acceptApplicant(req: Request, res: Response): Promise<void>{
+  async acceptApplicant(req: Request, res: Response): Promise<void> {
     try {
-      console.log("enterd")
-      const {applicantId}=req.params
+      console.log("enterd");
+      const { applicantId } = req.params;
 
-      const result=await this._recruiterService.acceptApplicant(applicantId)
+      const result = await this._recruiterService.acceptApplicant(applicantId);
 
       res.status(200).json(result);
-
     } catch (error) {
-      console.log("error accoured",error)
+      console.error("error accoured", error);
+    }
+  }
+  async rejectApplicant(req: Request, res: Response): Promise<void> {
+    try {
+      console.log("reached");
+      const { applicantId } = req.params;
+      const message = req.body;
+      console.log(message);
+      const result = await this._recruiterService.rejectApplicant(
+        applicantId,
+        message.rejectReason
+      );
+
+      res.status(200).json(result);
+    } catch (error) {
+      console.error("error accoured", error);
     }
   }
 }

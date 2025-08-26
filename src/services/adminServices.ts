@@ -1,14 +1,10 @@
 import { injectable, inject } from "tsyringe";
-import { AdminRepository } from "../repository/adminRepository";
-import jwt from "jsonwebtoken";
-import { IAdmin } from "../interfaces/models/Iadmin";
 import { IPasswordHash } from "../interfaces/IpasswordHash/IpasswordHash";
 import { IJwtService } from "../interfaces/IJwt/Ijwt";
 import { Roles } from "../config/roles";
 import { AdminLoginResponse } from "../interfaces/DTO/IServices/IAdminServise";
 import { IAdminService } from "../interfaces/Iserveices/IadminService";
 import { IAdminRepository } from "../interfaces/Irepositories/IadminRepository";
-import { AdminUserListResponse } from "../interfaces/DTO/IServices/IAdminServise";
 
 @injectable()
 export class AdminService implements IAdminService {
@@ -23,9 +19,8 @@ export class AdminService implements IAdminService {
     password: string
   ): Promise<AdminLoginResponse> {
     try {
-
       const admin = await this._adminRepository.findByEmail(email);
-      console.log("admin",admin)
+      console.log("admin", admin);
       if (!admin) {
         return {
           success: false,

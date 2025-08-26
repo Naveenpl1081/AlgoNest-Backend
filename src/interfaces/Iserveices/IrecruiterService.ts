@@ -70,4 +70,6 @@ export interface IRecruiterService {
     };
   }>
   acceptApplicant(applicantId:string):Promise<{success:boolean,message:string}>
+  rejectApplicant(applicantId:string,data:string):Promise<{success:boolean,message:string}>
+  getRecruiterProfile(recruiterId: string):Promise<any>
 }

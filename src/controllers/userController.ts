@@ -2,9 +2,10 @@ import { Request, Response } from "express";
 import { IUserService } from "../interfaces/Iserveices/IuserService";
 import { injectable, inject } from "tsyringe";
 import { HTTP_STATUS } from "../utils/httpStatus";
-
+import dotenv from "dotenv";
+dotenv.config();
 @injectable()
-export class UserController{
+export class UserController {
   constructor(@inject("IUserService") private _userService: IUserService) {}
 
   async register(req: Request, res: Response): Promise<void> {
@@ -63,7 +64,7 @@ export class UserController{
           httpOnly: true,
           secure: true,
           sameSite: "strict",
-          maxAge: 3 * 24 * 60 * 60 * 1000,
+          maxAge: Number(process.env.COOKIE_MAX_AGE),
         });
 
         res.status(HTTP_STATUS.OK).json({
@@ -79,6 +80,108 @@ export class UserController{
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
         .json({ error: err.message || "Internal server error" });
+    }
+  }
+
+  async githubCallback(req: Request, res: Response): Promise<void> {
+    try {
+      console.log("GitHub callback controller reached");
+      const { code } = req.body;
+
+      if (!code) {
+        res.status(400).json({
+          success: false,
+          message: "GitHub authorization code is required",
+        });
+        return;
+      }
+
+      const response = await this._userService.githubLogin(code);
+
+      if (response.success) {
+        const {
+          access_token,
+          refresh_token,
+          data: userData,
+          message,
+        } = response;
+
+        res.cookie("refresh_token", refresh_token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "strict",
+          maxAge: Number(process.env.COOKIE_MAX_AGE),
+        });
+
+        res.status(200).json({
+          success: true,
+          message,
+          access_token,
+          data: userData,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: response.message,
+        });
+      }
+    } catch (err: any) {
+      console.error("GitHub callback error:", err);
+      res.status(500).json({
+        success: false,
+        error: err.message || "Internal server error",
+      });
+    }
+  }
+
+  async linkedinCallback(req: Request, res: Response): Promise<void> {
+    try {
+      console.log("LinkedIn callback controller reached");
+      const { code } = req.body;
+
+      if (!code) {
+        res.status(400).json({
+          success: false,
+          message: "LinkedIn authorization code is required",
+        });
+        return;
+      }
+
+      const response = await this._userService.linkedinLogin(code);
+
+      if (response.success) {
+        const {
+          access_token,
+          refresh_token,
+          data: userData,
+          message,
+        } = response;
+
+        res.cookie("refresh_token", refresh_token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "strict",
+          maxAge: Number(process.env.COOKIE_MAX_AGE),
+        });
+
+        res.status(200).json({
+          success: true,
+          message,
+          access_token,
+          data: userData,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: response.message,
+        });
+      }
+    } catch (err: any) {
+      console.error("LinkedIn callback error:", err);
+      res.status(500).json({
+        success: false,
+        error: err.message || "Internal server error",
+      });
     }
   }
 

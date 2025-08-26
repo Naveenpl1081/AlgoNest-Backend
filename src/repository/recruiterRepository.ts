@@ -22,7 +22,7 @@ export class RecruiterRepository
       console.log("userData", recruiterData);
       return recruiterData;
     } catch (error) {
-      console.log("error occurred while fetching the user");
+      console.error("error occurred while fetching the user", error);
       throw new Error("An error occurred while retrieving the user");
     }
   }
@@ -38,7 +38,7 @@ export class RecruiterRepository
       const recruiter = await this.create(recruiterData);
       return recruiter;
     } catch (error) {
-      console.log("error occurred while creating the user");
+      console.error("error occurred while creating the user", error);
       throw new Error("An error occurred while creating the user");
     }
   }
@@ -55,7 +55,7 @@ export class RecruiterRepository
         recruiterData
       );
 
-      console.log("updatedRecruiter",updatedRecruiter)
+      console.log("updatedRecruiter", updatedRecruiter);
 
       return updatedRecruiter;
     } catch (error) {
@@ -82,7 +82,7 @@ export class RecruiterRepository
       const limit = options.limit || 6;
 
       const filter: FilterQuery<IRecruiter> = {};
-      filter.isVerified = true
+      filter.isVerified = true;
 
       if (options.search) {
         filter.$or = [
@@ -99,7 +99,7 @@ export class RecruiterRepository
         }
       }
 
-      console.log("filter",filter)
+      console.log("filter", filter);
 
       const result = (await this.find(filter, {
         pagination: { page, limit },
@@ -116,7 +116,7 @@ export class RecruiterRepository
         pages: Math.ceil(result.total / limit),
       };
     } catch (error) {
-      console.log("error occurred while fetching the users:", error);
+      console.error("error occurred while fetching the users:", error);
       throw new Error("Failed to fetch the users");
     }
   }
@@ -132,15 +132,12 @@ export class RecruiterRepository
       );
       return user;
     } catch (error) {
+      console.error(error);
       return null;
     }
   }
 
-
-  async getAllApplicants(options: {
-    page?: number;
-    limit?: number;
-  }): Promise<{
+  async getAllApplicants(options: { page?: number; limit?: number }): Promise<{
     data: IApplicants[];
     total: number;
     page: number;
@@ -154,7 +151,7 @@ export class RecruiterRepository
 
       const filter: FilterQuery<IApplicants> = {};
 
-      console.log("filter",filter)
+      console.log("filter", filter);
 
       filter.isVerified = false;
       filter.status = "Pending";
@@ -174,8 +171,8 @@ export class RecruiterRepository
         pages: Math.ceil(result.total / limit),
       };
     } catch (error) {
-      console.log("error occurred while fetching the users:", error);
+      console.error("error occurred while fetching the users:", error);
       throw new Error("Failed to fetch the users");
     }
-  } 
+  }
 }
