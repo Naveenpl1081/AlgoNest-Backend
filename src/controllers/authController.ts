@@ -19,8 +19,14 @@ export class AuthController {
           .json({ message: "No refresh token" });
       }
 
-      const payload: any = this.jwtService.verifyRefreshToken(token);
+      const payload = this.jwtService.verifyRefreshToken(token);
       console.log("payload", payload);
+
+      if (!payload) {
+        return res
+          .status(HTTP_STATUS.FORBIDDEN)
+          .json({ message: "Invalid refresh token" });
+      }
 
       const userRole = payload.role;
       if (!userRole) {

@@ -2,8 +2,11 @@ import { Request, Response } from "express";
 import { IUserService } from "../interfaces/Iserveices/IuserService";
 import { injectable, inject } from "tsyringe";
 import { HTTP_STATUS } from "../utils/httpStatus";
+import { AppError } from "../interfaces/models/IAppError";
 import dotenv from "dotenv";
+import { AuthenticatedRequest } from "../middleware/authMiddleware";
 dotenv.config();
+
 @injectable()
 export class UserController {
   constructor(@inject("IUserService") private _userService: IUserService) {}
@@ -22,8 +25,11 @@ export class UserController {
           .status(HTTP_STATUS.CONFLICT)
           .json({ message: serviceResponse.message });
       }
-    } catch (err: any) {
-      res.status(HTTP_STATUS.BAD_REQUEST).json({ error: err.message });
+    } catch (err: unknown) {
+      const error = err as AppError;
+      res
+        .status(error.statusCode || HTTP_STATUS.BAD_REQUEST)
+        .json({ error: error.message });
     }
   }
 
@@ -39,10 +45,11 @@ export class UserController {
       } else {
         res.status(HTTP_STATUS.BAD_REQUEST).json(response);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+        .json({ error: error.message });
     }
   }
   async login(req: Request, res: Response): Promise<void> {
@@ -76,10 +83,11 @@ export class UserController {
       } else {
         res.status(HTTP_STATUS.CONFLICT).json({ message: response.message });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ error: err.message || "Internal server error" });
+        .json({ error: error.message || "Internal server error" });
     }
   }
 
@@ -113,23 +121,24 @@ export class UserController {
           maxAge: Number(process.env.COOKIE_MAX_AGE),
         });
 
-        res.status(200).json({
+        res.status(HTTP_STATUS.OK).json({
           success: true,
           message,
           access_token,
           data: userData,
         });
       } else {
-        res.status(400).json({
+        res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
           message: response.message,
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       console.error("GitHub callback error:", err);
       res.status(500).json({
         success: false,
-        error: err.message || "Internal server error",
+        error: error.message || "Internal server error",
       });
     }
   }
@@ -140,7 +149,7 @@ export class UserController {
       const { code } = req.body;
 
       if (!code) {
-        res.status(400).json({
+        res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
           message: "LinkedIn authorization code is required",
         });
@@ -164,23 +173,24 @@ export class UserController {
           maxAge: Number(process.env.COOKIE_MAX_AGE),
         });
 
-        res.status(200).json({
+        res.status(HTTP_STATUS.OK).json({
           success: true,
           message,
           access_token,
           data: userData,
         });
       } else {
-        res.status(400).json({
+        res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
           message: response.message,
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       console.error("LinkedIn callback error:", err);
-      res.status(500).json({
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: err.message || "Internal server error",
+        error: error.message || "Internal server error",
       });
     }
   }
@@ -196,11 +206,12 @@ export class UserController {
       } else {
         res.status(HTTP_STATUS.BAD_REQUEST).json(response);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       console.error("Resend OTP Controller Error:", err);
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ message: "Internal server error" });
+        .json({ error: error.message || "Internal server error" });
     }
   }
 
@@ -216,10 +227,11 @@ export class UserController {
       } else {
         res.status(HTTP_STATUS.NOT_FOUND).json(response);
       }
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ success: false, message: error.message });
+        .json({ success: false, error: error.message });
     }
   }
 
@@ -238,17 +250,18 @@ export class UserController {
       } else {
         res.status(HTTP_STATUS.BAD_REQUEST).json(response);
       }
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ success: false, message: error.message });
+        .json({ success: false, error: error.message });
     }
   }
 
-  async profile(req: Request, res: Response): Promise<void> {
+  async profile(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       console.log("reached profile");
-      const userId = (req as any).user?.Id;
+      const userId = req.user?.id;
       console.log("userId", userId);
       if (!userId) {
         res
@@ -260,18 +273,19 @@ export class UserController {
       const user = await this._userService.getUserProfile(userId);
       console.log("profile user", user);
       res.status(HTTP_STATUS.OK).json({ success: true, data: user });
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       console.error("Profile error:", error);
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ message: "Something went wrong." });
+        .json({ error: error.message || "Something went wrong." });
     }
   }
 
-  async updateProfile(req: Request, res: Response): Promise<void> {
+  async updateProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       console.log("reched profile changed");
-      const userId = (req as any).user?.Id;
+      const userId = req.user?.id;
       console.log("userId", userId);
       if (!userId) {
         res
@@ -295,10 +309,11 @@ export class UserController {
       console.log(updatedUser);
 
       res.status(HTTP_STATUS.OK).json({ success: true, user: updatedUser });
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
-        message: error.message || "Something went wrong while updating profile",
+        error: error.message || "Something went wrong while updating profile",
       });
     }
   }
@@ -314,10 +329,11 @@ export class UserController {
       res
         .status(HTTP_STATUS.OK)
         .json({ success: true, message: "Logged out successfully" });
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ success: false, message: error.message || "Logout failed" });
+        .json({ success: false, error: error.message || "Logout failed" });
     }
   }
 }

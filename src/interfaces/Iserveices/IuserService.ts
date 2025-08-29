@@ -4,8 +4,7 @@ import {
   UpdateProfileDTO,
 } from "../DTO/IServices/IUserServise";
 import { SignupUserData, LoginUserData } from "../DTO/IServices/IUserServise";
-import { IUser } from "../models/Iuser";
-
+import { IUser, UserProfile } from "../models/Iuser";
 
 export interface IUserService {
   userSignUp(data: SignupUserData): Promise<TempUserResponse>;
@@ -22,7 +21,7 @@ export interface IUserService {
     email: string,
     newPassword: string
   ): Promise<{ success: boolean; message: string }>;
-  getUserProfile(userId: string): Promise<any>;
+  getUserProfile(userId: string): Promise<UserProfile>;
   updateProfile(data: UpdateProfileDTO): Promise<IUser | null>;
   getAllUsers(options: {
     page?: number;
@@ -44,7 +43,14 @@ export interface IUserService {
       };
     };
   }>;
-  findOneUser(userId: string): Promise<IUser | null>;
-  githubLogin(code: string): Promise<LoginResponse>
-  linkedinLogin(code: string): Promise<LoginResponse>
+  findOneUser(userId: string): Promise<{
+    success: boolean;
+    message: string;
+    data?: {
+      id: string;
+      status: string;
+    };
+  }>;
+  githubLogin(code: string): Promise<LoginResponse>;
+  linkedinLogin(code: string): Promise<LoginResponse>;
 }

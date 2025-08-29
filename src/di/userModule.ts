@@ -23,4 +23,4 @@ container.registerSingleton<IPasswordHash>("IPasswordHash", PasswordService);
 container.registerSingleton<IEmailService>("IEmailService", EmailService);
 container.registerSingleton<IOTPRedis>("IOTPRedis", OtpRedisService);
 container.registerSingleton<IJwtService>("IJwtService", JWTService);
-container.registerSingleton<AuthMiddleware>(AuthMiddleware, AuthMiddleware);
+container.registerSingleton<AuthMiddleware>("AuthMiddleware", AuthMiddleware);

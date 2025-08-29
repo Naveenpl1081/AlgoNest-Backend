@@ -50,11 +50,8 @@ export interface IRecruiterService {
       };
     };
   }>;
-  findOneRecruiter(recruiterId: string): Promise<IRecruiter | null>
- getAllApplicants(options: {
-    page?: number;
-    limit?: number;
-  }): Promise<{
+  findOneRecruiter(recruiterId: string): Promise<IRecruiter | null>;
+  getAllApplicants(options: { page?: number; limit?: number }): Promise<{
     success: boolean;
     message: string;
     data?: {
@@ -68,8 +65,13 @@ export interface IRecruiterService {
         hasPrevPage: boolean;
       };
     };
-  }>
-  acceptApplicant(applicantId:string):Promise<{success:boolean,message:string}>
-  rejectApplicant(applicantId:string,data:string):Promise<{success:boolean,message:string}>
-  getRecruiterProfile(recruiterId: string):Promise<any>
+  }>;
+  acceptApplicant(
+    applicantId: string
+  ): Promise<{ success: boolean; message: string }>;
+  rejectApplicant(
+    applicantId: string,
+    data: string
+  ): Promise<{ success: boolean; message: string }>;
+  getRecruiterProfile(recruiterId: string): Promise<Partial<IRecruiter>>;
 }

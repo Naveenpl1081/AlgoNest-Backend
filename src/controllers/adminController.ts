@@ -251,11 +251,14 @@ export class AdminController {
       res
         .status(HTTP_STATUS.OK)
         .json({ success: true, message: "Logged out successfully" });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
+
+      const message = error instanceof Error ? error.message : "Logout failed";
+
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ success: false, message: error.message || "Logout failed" });
+        .json({ success: false, message });
     }
   }
   async acceptApplicant(req: Request, res: Response): Promise<void> {

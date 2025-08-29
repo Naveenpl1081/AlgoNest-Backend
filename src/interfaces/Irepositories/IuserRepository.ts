@@ -3,7 +3,7 @@ import { IUser } from "../models/Iuser";
 export interface IUserRepository {
   createUser(userData: Partial<IUser>): Promise<IUser>;
   findByEmail(email: string): Promise<IUser | null>;
-  findById(id: string): Promise<any | null>;
+  findUserById(id: string): Promise<IUser | null>;
   updateUserProfile(
     id: string,
     updateData: Partial<IUser>
@@ -23,5 +23,5 @@ export interface IUserRepository {
     page: number;
     limit: number;
     pages: number;
-  }> 
+  }>;
 }

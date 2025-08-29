@@ -10,9 +10,19 @@ export interface IUser extends Document {
   github?: string;
   linkedin?: string;
   profileImage?: string;
-  status?: string
+  status: string;
   createdAt?: Date;
   updatedAt?: Date;
-  isVerified?:boolean
+  isVerified?: boolean;
 }
 
+export interface UserProfile {
+  username: string;
+  email: string;
+  createdAt?: Date;
+  firstName?: string;
+  lastName?: string;
+  github?: string;
+  linkedin?: string;
+  profileImage?: string;
+}
