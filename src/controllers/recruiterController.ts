@@ -3,7 +3,9 @@ import { inject, injectable } from "tsyringe";
 import { IRecruiterService } from "../interfaces/Iserveices/IrecruiterService";
 import { HTTP_STATUS } from "../utils/httpStatus";
 import { uploadToCloudinary } from "../utils/cloudinary";
+import { AppError } from "../interfaces/models/IAppError";
 import dotenv from "dotenv";
+import { AuthenticatedRequest } from "../middleware/authMiddleware";
 dotenv.config();
 
 @injectable()
@@ -28,8 +30,9 @@ export class RecruiterController {
           .status(HTTP_STATUS.CONFLICT)
           .json({ message: serviceResponse.message });
       }
-    } catch (err: any) {
-      res.status(HTTP_STATUS.BAD_REQUEST).json({ error: err.message });
+    } catch (err: unknown) {
+      const error = err as AppError;
+      res.status(HTTP_STATUS.BAD_REQUEST).json({ error: error.message });
     }
   }
   async verifyOtp(req: Request, res: Response): Promise<void> {
@@ -44,10 +47,11 @@ export class RecruiterController {
       } else {
         res.status(HTTP_STATUS.BAD_REQUEST).json(response);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
+        .json({ error: error.message });
     }
   }
   async login(req: Request, res: Response): Promise<void> {
@@ -81,10 +85,11 @@ export class RecruiterController {
       } else {
         res.status(HTTP_STATUS.CONFLICT).json({ message: response.message });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ error: err.message || "Internal server error" });
+        .json({ error: error.message || "Internal server error" });
     }
   }
 
@@ -99,11 +104,12 @@ export class RecruiterController {
       } else {
         res.status(HTTP_STATUS.BAD_REQUEST).json(response);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       console.error("Resend OTP Controller Error:", err);
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ message: "Internal server error" });
+        .json({ error: error.message || "Internal server error" });
     }
   }
 
@@ -119,10 +125,11 @@ export class RecruiterController {
       } else {
         res.status(HTTP_STATUS.NOT_FOUND).json(response);
       }
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ success: false, message: error.message });
+        .json({ success: false, error: error.message });
     }
   }
 
@@ -141,16 +148,20 @@ export class RecruiterController {
       } else {
         res.status(HTTP_STATUS.BAD_REQUEST).json(response);
       }
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ success: false, message: error.message });
+        .json({ success: false, error: error.message });
     }
   }
 
-  async submitDocuments(req: Request, res: Response): Promise<void> {
+  async submitDocuments(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
     try {
-      const recruiterId = (req as any).user?.Id || (req as any).recruiter?.Id;
+      const recruiterId = req.user?.id;
 
       console.log("recruiterId", recruiterId);
 
@@ -183,19 +194,21 @@ export class RecruiterController {
         message: result.message,
         data: result.data,
       });
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       console.error("Submit Documents Error:", error);
+
       res.status(500).json({
         success: false,
-        message: error.message || "Failed to submit documents",
+        error: error.message || "Failed to submit documents",
       });
     }
   }
 
-  async profile(req: Request, res: Response): Promise<void> {
+  async profile(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       console.log("Reached recruiter profile");
-      const recruiterId = (req as any).user?.Id;
+      const recruiterId = req.user?.id;
 
       if (!recruiterId) {
         res
@@ -209,11 +222,12 @@ export class RecruiterController {
       );
 
       res.status(HTTP_STATUS.OK).json({ success: true, data: recruiter });
-    } catch (error) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       console.error("Recruiter profile error:", error);
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ message: "Something went wrong." });
+        .json({ error: error.message || "Something went wrong." });
     }
   }
   async logout(req: Request, res: Response): Promise<void> {
@@ -227,10 +241,11 @@ export class RecruiterController {
       res
         .status(HTTP_STATUS.OK)
         .json({ success: true, message: "Logged out successfully" });
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as AppError;
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
-        .json({ success: false, message: error.message || "Logout failed" });
+        .json({ success: false, error: error.message || "Logout failed" });
     }
   }
 }

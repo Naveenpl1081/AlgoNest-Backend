@@ -1,12 +1,6 @@
 import redis from "../redis/redisClient";
 import { IOTPRedis } from "../interfaces/Iredis/IOTPRedis";
-
-interface IReddisPayload {
-  username: string;
-  password: string;
-  otp?: string;
-  email: string;
-}
+import { IReddisPayload } from "../interfaces/models/IOtp";
 
 export class OtpRedisService implements IOTPRedis {
   private key(email: string) {
@@ -29,7 +23,7 @@ export class OtpRedisService implements IOTPRedis {
     await redis.set(this.backupKey(email), JSON.stringify(backupData));
   }
 
-  async getOTP(email: string): Promise<string | null> {
+  async getOTP(email: string): Promise<IReddisPayload | null> {
     const value = await redis.get(this.key(email));
     return value ? JSON.parse(value) : null;
   }

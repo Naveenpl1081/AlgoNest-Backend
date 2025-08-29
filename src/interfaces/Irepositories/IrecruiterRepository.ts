@@ -6,8 +6,8 @@ export interface IRecruiterRepository {
   updateRecruiterDetails(
     recruiterId: string,
     recruiterData: Partial<IRecruiter>
-  ): Promise<IRecruiter | null>
-  findById(id: string): Promise<IRecruiter | null>
+  ): Promise<IRecruiter | null>;
+  findById(id: string): Promise<IRecruiter | null>;
   getAllRecruiters(options: {
     page?: number;
     limit?: number;
@@ -19,20 +19,17 @@ export interface IRecruiterRepository {
     page: number;
     limit: number;
     pages: number;
-  }>
+  }>;
   findRecruiterAndUpdate(
     userId: string,
     status: "Active" | "InActive"
-  ): Promise<IRecruiter | null>
+  ): Promise<IRecruiter | null>;
 
-  getAllApplicants(options: {
-    page?: number;
-    limit?: number;
-  }): Promise<{
+  getAllApplicants(options: { page?: number; limit?: number }): Promise<{
     data: IApplicants[];
     total: number;
     page: number;
     limit: number;
     pages: number;
-  }>
+  }>;
 }

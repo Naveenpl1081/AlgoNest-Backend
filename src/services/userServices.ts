@@ -1,6 +1,6 @@
 import { OtpPurpose, TEMP_USER_EXPIRY_SECONDS } from "../config/otpConfig";
 import { UpdateProfileDTO } from "../interfaces/DTO/IServices/IUserServise";
-import { IUser } from "../interfaces/models/Iuser";
+import { IUser, UserProfile } from "../interfaces/models/Iuser";
 import { uploadToCloudinary } from "../utils/cloudinary";
 
 import { Roles } from "../config/roles";
@@ -104,13 +104,11 @@ export class UserService implements IUserService {
             console.log("GitHub emails response:", emails);
 
             if (Array.isArray(emails) && emails.length > 0) {
-              const primaryEmail = emails.find(
-                (e: any) => e.primary && e.verified
-              );
+              const primaryEmail = emails.find((e) => e.primary && e.verified);
               if (primaryEmail) {
                 userData.email = primaryEmail.email;
               } else {
-                const verifiedEmail = emails.find((e: any) => e.verified);
+                const verifiedEmail = emails.find((e) => e.verified);
                 if (verifiedEmail) {
                   userData.email = verifiedEmail.email;
                 } else {
@@ -455,9 +453,9 @@ export class UserService implements IUserService {
     }
   }
 
-  async getUserProfile(userId: string) {
+  async getUserProfile(userId: string): Promise<UserProfile> {
     console.log("profile service reached");
-    const user = await this._userRepository.findById(userId);
+    const user = await this._userRepository.findUserById(userId);
     console.log("service pro", user);
 
     if (!user) {
@@ -562,21 +560,47 @@ export class UserService implements IUserService {
       };
     }
   }
-  async findOneUser(userId: string): Promise<IUser | null> {
+  async findOneUser(userId: string): Promise<{
+    success: boolean;
+    message: string;
+    data?: {
+      id: string;
+      status: string;
+    };
+  }> {
     try {
-      const user = await this._userRepository.findById(userId);
-      const newStatus: "Active" | "InActive" =
-        user.status === "Active" ? "InActive" : "Active";
+      const user = await this._userRepository.findUserById(userId);
+
+      if (!user) {
+        return {
+          success: false,
+          message: "user not found",
+        };
+      }
+      const newStatus = user.status === "Active" ? "InActive" : "Active";
       console.log("userstauts", newStatus);
       const updatedUser = await this._userRepository.findUserAndUpdate(
         userId,
         newStatus
       );
       console.log("updateuser", updatedUser);
-      return updatedUser;
+      if (!updatedUser) {
+        return {
+          success: false,
+          message: "failed to change user data",
+        };
+      }
+      return {
+        success: true,
+        message: "user updated successfully",
+        data: {
+          id: updatedUser._id,
+          status: updatedUser?.status,
+        },
+      };
     } catch (error) {
       console.error("error occured:", error);
-      return null;
+      throw error;
     }
   }
 

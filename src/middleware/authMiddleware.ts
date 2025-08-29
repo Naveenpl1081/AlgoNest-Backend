@@ -7,11 +7,11 @@ import { IUserRepository } from "../interfaces/Irepositories/IuserRepository";
 import { IRecruiterRepository } from "../interfaces/Irepositories/IrecruiterRepository";
 
 interface JwtPayload {
-  Id: string;
+  id: string;
   role: Roles;
 }
 
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   user?: JwtPayload;
 }
 
@@ -55,8 +55,13 @@ export class AuthMiddleware {
         console.log("payload", payload);
 
         if (requiredRole == Roles.USER) {
-          const user = await this._userRepository.findById(payload.Id);
+          const user = await this._userRepository.findUserById(payload.id);
           console.log("user", user);
+          if (!user) {
+            return res
+              .status(HTTP_STATUS.NOT_FOUND)
+              .json({ message: "user not found" });
+          }
           if (user.status === "InActive") {
             return res
               .status(HTTP_STATUS.FORBIDDEN)
@@ -64,7 +69,7 @@ export class AuthMiddleware {
           }
         } else {
           const recruiter = await this._recruiterRepository.findById(
-            payload.Id
+            payload.id
           );
           console.log("recruiter", recruiter);
 

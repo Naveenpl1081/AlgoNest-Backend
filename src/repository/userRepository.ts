@@ -35,8 +35,14 @@ export class UserRepository
       throw new Error("An error occurred while creating the user");
     }
   }
-  async findById(id: string): Promise<IUser | null> {
-    return await super.findById(id);
+  async findUserById(id: string): Promise<IUser | null> {
+    try {
+      const user = await this.findById(id);
+      return user;
+    } catch (error) {
+      console.error(error);
+      throw new Error("An error occurred while creating the user");
+    }
   }
 
   async updateUserProfile(
