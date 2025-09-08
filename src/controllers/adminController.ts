@@ -135,6 +135,7 @@ export class AdminController {
       const limit = parseInt(req.query.limit as string) || undefined;
       const search = (req.query.search as string) || undefined;
       const status = (req.query.status as string) || undefined;
+      const company = (req.query.company as string) || undefined;
 
       console.log("status,", status);
 
@@ -143,6 +144,7 @@ export class AdminController {
         limit,
         search,
         status,
+        company,
       });
 
       console.log(

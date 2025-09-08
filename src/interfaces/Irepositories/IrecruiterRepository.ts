@@ -13,6 +13,7 @@ export interface IRecruiterRepository {
     limit?: number;
     search?: string;
     status?: string;
+    company?:string
   }): Promise<{
     data: IRecruiter[];
     total: number;

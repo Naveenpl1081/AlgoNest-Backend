@@ -1,5 +1,5 @@
 import morgan, { StreamOptions } from "morgan";
-import Logger from "../utils/logger";
+import logger from "../utils/logger"; // Adjust path if needed
 import { RequestHandler } from "express";
 import dotenv from "dotenv";
 
@@ -11,7 +11,7 @@ class LoggerMiddleware {
   constructor() {
     this.stream = {
       write: (message: string) => {
-        Logger.http(message.trim());
+        logger.http(message.trim());
       },
     };
   }

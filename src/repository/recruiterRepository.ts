@@ -69,6 +69,7 @@ export class RecruiterRepository
     limit?: number;
     search?: string;
     status?: string;
+    company?: string;
   }): Promise<{
     data: IRecruiter[];
     total: number;
@@ -96,6 +97,20 @@ export class RecruiterRepository
           filter.status = "Active";
         } else if (options.status === "blocked") {
           filter.status = "InActive";
+        }
+      }
+
+      if (options.company) {
+        if (options.company === "Private Limited") {
+          filter.companyType = "Private Limited";
+        } else if (options.company === "Public Limited") {
+          filter.companyType = "Public Limited";
+        } else if (options.company === "LLP") {
+          filter.companyType = "LLP";
+        } else if (options.company === "Proprietorship") {
+          filter.companyType = "Proprietorship";
+        } else if (options.company === "Startup") {
+          filter.companyType = "Startup";
         }
       }
 

@@ -51,6 +51,4 @@ export interface IUserService {
       status: string;
     };
   }>;
-  githubLogin(code: string): Promise<LoginResponse>;
-  linkedinLogin(code: string): Promise<LoginResponse>;
 }
