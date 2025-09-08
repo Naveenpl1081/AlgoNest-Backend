@@ -330,6 +330,7 @@ export class RecruiterService implements IRecruiterService {
     limit?: number;
     search?: string;
     status?: string;
+    company?: string;
   }): Promise<{
     success: boolean;
     message: string;
@@ -354,6 +355,7 @@ export class RecruiterService implements IRecruiterService {
         limit,
         search: options.search,
         status: options.status,
+        company: options.company,
       });
 
       console.log("result from the user service:", result);

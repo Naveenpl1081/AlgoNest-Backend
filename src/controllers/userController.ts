@@ -5,11 +5,17 @@ import { HTTP_STATUS } from "../utils/httpStatus";
 import { AppError } from "../interfaces/models/IAppError";
 import dotenv from "dotenv";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
+import { IAuthService } from "../interfaces/Iserveices/IauthService";
+
 dotenv.config();
 
 @injectable()
 export class UserController {
-  constructor(@inject("IUserService") private _userService: IUserService) {}
+  constructor(
+    @inject("IUserService") private _userService: IUserService,
+    @inject("GitHubService") private _githubService: IAuthService,
+    @inject("LinkedInService") private _linkedinService: IAuthService
+  ) {}
 
   async register(req: Request, res: Response): Promise<void> {
     try {
@@ -104,7 +110,7 @@ export class UserController {
         return;
       }
 
-      const response = await this._userService.githubLogin(code);
+      const response = await this._githubService.authLogin(code);
 
       if (response.success) {
         const {
@@ -142,11 +148,11 @@ export class UserController {
       });
     }
   }
-
   async linkedinCallback(req: Request, res: Response): Promise<void> {
     try {
       console.log("LinkedIn callback controller reached");
-      const { code } = req.body;
+
+      const { code } = req.query;
 
       if (!code) {
         res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -155,8 +161,10 @@ export class UserController {
         });
         return;
       }
+      console.log("hello");
 
-      const response = await this._userService.linkedinLogin(code);
+      const response = await this._linkedinService.authLogin(code as string);
+      console.log("response", response);
 
       if (response.success) {
         const {
@@ -176,8 +184,8 @@ export class UserController {
         res.status(HTTP_STATUS.OK).json({
           success: true,
           message,
-          access_token,
           data: userData,
+          access_token,
         });
       } else {
         res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -271,6 +279,7 @@ export class UserController {
       }
 
       const user = await this._userService.getUserProfile(userId);
+
       console.log("profile user", user);
       res.status(HTTP_STATUS.OK).json({ success: true, data: user });
     } catch (err: unknown) {

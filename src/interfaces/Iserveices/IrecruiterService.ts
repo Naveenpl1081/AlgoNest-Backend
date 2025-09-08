@@ -35,6 +35,7 @@ export interface IRecruiterService {
     limit?: number;
     search?: string;
     status?: string;
+    company?: string;
   }): Promise<{
     success: boolean;
     message: string;

@@ -63,6 +63,11 @@ export class AuthMiddleware {
               .json({ message: "user not found" });
           }
           if (user.status === "InActive") {
+            res.clearCookie("refresh_token", {
+              httpOnly: true,
+              secure: true,
+              sameSite: "strict",
+            });
             return res
               .status(HTTP_STATUS.FORBIDDEN)
               .json({ message: "user blocked by admin" });
@@ -80,6 +85,11 @@ export class AuthMiddleware {
           }
 
           if (recruiter.status === "InActive") {
+            res.clearCookie("refresh_token", {
+              httpOnly: true,
+              secure: true,
+              sameSite: "strict",
+            });
             return res
               .status(HTTP_STATUS.FORBIDDEN)
               .json({ message: "User blocked by admin" });

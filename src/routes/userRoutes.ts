@@ -25,7 +25,7 @@ export class UserRoutes {
     );
     this.router.post("/login", userController.login.bind(userController));
     this.router.post("/github/callback", userController.githubCallback.bind(userController));
-    this.router.post("/linkedin/callback", userController.linkedinCallback.bind(userController));
+    this.router.get("/linkedin/callback", userController.linkedinCallback.bind(userController));
     this.router.post(
       "/resend-otp",
       userController.resendOtp.bind(userController)
