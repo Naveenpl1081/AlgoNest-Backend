@@ -27,6 +27,19 @@ import { AdminRepository } from "../repository/adminRepository";
 import { IAdminService } from "../interfaces/Iserveices/IadminService";
 import { AdminService } from "../services/adminServices";
 
+import { ProblemRepository } from "../repository/problemRepository";
+import { IProblemRepository } from "../interfaces/Irepositories/IproblemRepository";
+import { IProblemService } from "../interfaces/Iserveices/IproblemService";
+import { ProblemService } from "../services/problemService";
+import { ICategoryService } from "../interfaces/Iserveices/IcategoryService";
+import { CategoryService } from "../services/categoryService";
+import { ICategoryRepository } from "../interfaces/Irepositories/IcategoryRepository";
+import { CategoryRepository } from "../repository/categoryRepository";
+import { IExecuteService } from "../interfaces/Iserveices/IexecuteService";
+import { ExecuteService } from "../services/executeService";
+import { IExecuteRepository } from "../interfaces/Irepositories/IexecuteRepository";
+import { ExecuteRepository } from "../repository/executeRepository";
+
 container.registerSingleton<IOTPService>("IOTPService", OTPService);
 container.registerSingleton<IUserRepository>("IUserRepository", UserRepository);
 container.registerSingleton<IUserService>("IUserService", UserService);
@@ -50,5 +63,14 @@ container.registerSingleton<IAdminRepository>(
   AdminRepository
 );
 container.registerSingleton<IAdminService>("IAdminService", AdminService);
+container.registerSingleton<IProblemRepository>(
+  "IProblemRepository",
+  ProblemRepository
+);
+container.registerSingleton<IProblemService>("IProblemService", ProblemService);
+container.registerSingleton<ICategoryService>("ICategoryService",CategoryService)
+container.registerSingleton<ICategoryRepository>("ICategoryRepository",CategoryRepository)
+container.registerSingleton<IExecuteService>("IExecuteService",ExecuteService)
+container.registerSingleton<IExecuteRepository>("IExecuteRepository",ExecuteRepository)
 
 export { container };

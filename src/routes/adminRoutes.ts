@@ -1,6 +1,8 @@
 import express, { Router } from "express";
 import { container } from "../di/container";
 import { AdminController } from "../controllers/adminController";
+import { ProblemController } from "../controllers/problemController";
+import { CategoryController } from "../controllers/categoryController";
 
 export class AdminRoutes {
   private router: Router;
@@ -12,6 +14,8 @@ export class AdminRoutes {
 
   private setupRoutes() {
     const adminController = container.resolve(AdminController);
+    const problemController = container.resolve(ProblemController);
+    const categoryController = container.resolve(CategoryController);
     this.router.post("/login", adminController.login.bind(adminController));
     this.router.get(
       "/userslist",
@@ -43,6 +47,43 @@ export class AdminRoutes {
     this.router.patch(
       "/reject-applicant/:applicantId",
       adminController.rejectApplicant.bind(adminController)
+    );
+    this.router.get(
+      "/problems",
+      problemController.getAllProblems.bind(problemController)
+    );
+    this.router.post(
+      "/addproblems",
+      problemController.addProblemController.bind(problemController)
+    );
+    this.router.put(
+      "/updateproblem/:problemId",
+      problemController.updateProblemController.bind(problemController)
+    );
+    this.router.post(
+      "/addcategory",
+      categoryController.addCategoryController.bind(categoryController)
+    );
+    this.router.get(
+      "/allcategory",
+      categoryController.getAllCategories.bind(categoryController)
+    );
+    this.router.get(
+      "/categorylist",
+      categoryController.categoryList.bind(categoryController)
+    );
+    this.router.put(
+      "/updatecategory/:categoryId",
+      categoryController.updateCategoryController.bind(categoryController)
+    );
+
+    this.router.patch(
+      "/category/:id",
+      categoryController.toggleCategoryStatus.bind(categoryController)
+    );
+    this.router.patch(
+      "/problems/:id",
+      problemController.toggleProblemStatus.bind(problemController)
     );
   }
 

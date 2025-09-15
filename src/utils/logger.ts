@@ -3,15 +3,15 @@ import path from "path";
 import { createLogger, format, transports, Logger } from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 
-// Directory where logs will be stored
+
 const logDir = path.join(__dirname, "../../logs");
 
-// Create logs directory if it doesn't exist
+
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir);
 }
 
-// Function to delete files older than 14 days
+
 function cleanOldLogs() {
   const files = fs.readdirSync(logDir);
   files.forEach(file => {
@@ -25,7 +25,7 @@ function cleanOldLogs() {
   });
 }
 
-// Run cleanup on startup
+
 cleanOldLogs();
 
 const logger: Logger = createLogger({
@@ -55,7 +55,7 @@ const logger: Logger = createLogger({
   ],
 });
 
-// Debug rotation events
+
 logger.on('rotate', function(oldFilename, newFilename) {
   console.log(`Rotated from ${oldFilename} to ${newFilename}`);
 });
