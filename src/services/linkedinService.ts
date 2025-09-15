@@ -13,23 +13,21 @@ export class LinkedInService implements IAuthService {
 
   private async getLinkedInAccessToken(code: string) {
     try {
-      console.log("=== Getting LinkedIn Access Token ===");
-      console.log("Code:", code);
-      console.log("Client ID:", process.env.LINKEDIN_CLIENT_ID);
-      console.log("Redirect URI:", process.env.LINKEDIN_REDIRECT_URI);
-      
-    
-      if (!process.env.LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET || !process.env.LINKEDIN_REDIRECT_URI) {
+      if (
+        !process.env.LINKEDIN_CLIENT_ID ||
+        !process.env.LINKEDIN_CLIENT_SECRET ||
+        !process.env.LINKEDIN_REDIRECT_URI
+      ) {
         throw new Error("Missing LinkedIn environment variables");
       }
-      
+
       const params = new URLSearchParams({
         grant_type: "authorization_code",
         code: code,
         client_id: process.env.LINKEDIN_CLIENT_ID,
         client_secret: process.env.LINKEDIN_CLIENT_SECRET,
-        redirect_uri: process.env.LINKEDIN_REDIRECT_URI, 
-        scope: "openid profile email r_liteprofile r_emailaddress"
+        redirect_uri: process.env.LINKEDIN_REDIRECT_URI,
+        scope: "openid profile email r_liteprofile r_emailaddress",
       });
 
       console.log("Request params:", params.toString());
@@ -53,7 +51,9 @@ export class LinkedInService implements IAuthService {
 
       if (!response.ok) {
         console.error("LinkedIn token error:", responseText);
-        throw new Error(`LinkedIn token error: ${response.status} - ${responseText}`);
+        throw new Error(
+          `LinkedIn token error: ${response.status} - ${responseText}`
+        );
       }
 
       const data = JSON.parse(responseText);
@@ -68,19 +68,24 @@ export class LinkedInService implements IAuthService {
   private async getLinkedInUserDataFromAPI(accessToken: string) {
     try {
       console.log("Getting LinkedIn user data from API...");
-      
-      
+
       const userInfoResponse = await fetch(
         "https://api.linkedin.com/v2/userinfo",
         {
-          headers: { Authorization: `Bearer ${accessToken}` }
+          headers: { Authorization: `Bearer ${accessToken}` },
         }
       );
 
       if (!userInfoResponse.ok) {
         const errorText = await userInfoResponse.text();
-        console.error("LinkedIn userinfo error:", userInfoResponse.status, errorText);
-        throw new Error(`Failed to get user info from LinkedIn API: ${userInfoResponse.status}`);
+        console.error(
+          "LinkedIn userinfo error:",
+          userInfoResponse.status,
+          errorText
+        );
+        throw new Error(
+          `Failed to get user info from LinkedIn API: ${userInfoResponse.status}`
+        );
       }
 
       const userData = await userInfoResponse.json();
@@ -94,7 +99,7 @@ export class LinkedInService implements IAuthService {
         family_name: userData.family_name,
         picture: userData.picture,
         vanityName: userData.vanityName || userData.sub,
-        email_verified: userData.email_verified
+        email_verified: userData.email_verified,
       };
     } catch (error) {
       console.error("Error getting LinkedIn user data:", error);
@@ -114,7 +119,9 @@ export class LinkedInService implements IAuthService {
         };
       }
 
-      const userData = await this.getLinkedInUserDataFromAPI(tokenResponse.access_token);
+      const userData = await this.getLinkedInUserDataFromAPI(
+        tokenResponse.access_token
+      );
 
       if (!userData.email) {
         return {
@@ -126,7 +133,9 @@ export class LinkedInService implements IAuthService {
       let user = await this._userRepository.findByEmail(userData.email);
       console.log("Existing user:", user);
 
-      const linkedinUrl = userData.vanityName ? `https://www.linkedin.com/in/${userData.vanityName}` : '';
+      const linkedinUrl = userData.vanityName
+        ? `https://www.linkedin.com/in/${userData.vanityName}`
+        : "";
 
       if (user) {
         await this._userRepository.updateUserProfile(String(user._id), {
@@ -134,9 +143,10 @@ export class LinkedInService implements IAuthService {
         });
       } else {
         const newUser = {
-          username: userData.name || `${userData.given_name} ${userData.family_name}`,
+          username:
+            userData.name || `${userData.given_name} ${userData.family_name}`,
           email: userData.email,
-          password: "linkedin_oauth", 
+          password: "linkedin_oauth",
           status: "Active",
           linkedin: linkedinUrl,
         };
@@ -152,7 +162,10 @@ export class LinkedInService implements IAuthService {
 
       const userId = String(user._id);
       const access_token = this._jwtService.generateAccessToken(userId, "USER");
-      const refresh_token = this._jwtService.generateRefreshToken(userId, "USER");
+      const refresh_token = this._jwtService.generateRefreshToken(
+        userId,
+        "USER"
+      );
 
       return {
         success: true,

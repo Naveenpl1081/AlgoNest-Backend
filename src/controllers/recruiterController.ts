@@ -166,7 +166,7 @@ export class RecruiterController {
       console.log("recruiterId", recruiterId);
 
       if (!recruiterId) {
-        res.status(401).json({
+        res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,
           message: "Unauthorized: Recruiter ID missing in token",
         });
@@ -189,7 +189,7 @@ export class RecruiterController {
         { ...data, registrationCertificate: imageUrl }
       );
 
-      res.status(200).json({
+      res.status(HTTP_STATUS.OK).json({
         success: result.success,
         message: result.message,
         data: result.data,
@@ -198,7 +198,7 @@ export class RecruiterController {
       const error = err as AppError;
       console.error("Submit Documents Error:", error);
 
-      res.status(500).json({
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         error: error.message || "Failed to submit documents",
       });

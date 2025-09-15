@@ -1,0 +1,7 @@
+import mongoose, { Document } from "mongoose";
+
+export interface ICategory extends Document {
+    _id: string;
+    name: string;
+    status: "Active" | "InActive";
+}
