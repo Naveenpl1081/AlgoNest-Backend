@@ -270,7 +270,7 @@ export class AdminController {
 
       const result = await this._recruiterService.acceptApplicant(applicantId);
 
-      res.status(200).json(result);
+      res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       console.error("error accoured", error);
     }
@@ -286,7 +286,7 @@ export class AdminController {
         message.rejectReason
       );
 
-      res.status(200).json(result);
+      res.status(HTTP_STATUS.OK).json(result);
     } catch (error) {
       console.error("error accoured", error);
     }

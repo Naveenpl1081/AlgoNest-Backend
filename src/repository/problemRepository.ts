@@ -70,14 +70,11 @@ export class ProblemRepository
 
   async addProblem(problem: Partial<IProblem>): Promise<IProblem> {
     try {
-      console.log("problemsssss", problem);
-      
-      // Remove _id if it exists and is empty
       const { _id, ...problemWithoutId } = problem;
       const cleanProblem = _id ? problem : problemWithoutId;
       
       const newProblem = await this.create(cleanProblem);
-      console.log("newProblem", newProblem);
+
       return newProblem;
     } catch (error) {
       console.error("error occurred while creating the problem", error);
@@ -86,7 +83,7 @@ export class ProblemRepository
   }
   async findProblemById(problemId: string): Promise<IProblem | null> {
     try {
-      // Validate ObjectId format
+     
       if (!problemId || problemId.length !== 24) {
         throw new Error("Invalid problem ID format");
       }
@@ -104,13 +101,14 @@ export class ProblemRepository
     data: Partial<IProblem>
   ): Promise<IProblem | null> {
     try {
-      // Validate ObjectId format
+    
       if (!problemId || problemId.length !== 24) {
         throw new Error("Invalid problem ID format");
       }
       
       
       const { _id, ...updateData } = data;
+      console.log(_id)
       
       const updatedProblem = await this.updateOne(
         new Types.ObjectId(problemId),

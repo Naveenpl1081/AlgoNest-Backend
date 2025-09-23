@@ -15,27 +15,19 @@ export class ProblemController {
 
   async getAllProblems(req: Request, res: Response): Promise<void> {
     try {
-      console.log("function fetching all the users");
       const page = parseInt(req.query.page as string) || undefined;
       const limit = parseInt(req.query.limit as string) || undefined;
       const search = (req.query.search as string) || undefined;
       const status = (req.query.status as string) || undefined;
       const verified = (req.query.verified as string) || undefined;
 
-      console.log("status,", status);
-
       const serviceResponse = await this._problemService.getAllProblems({
         page,
         limit,
         search,
         status,
-        verified
+        verified,
       });
-
-      console.log(
-        "result from the fetching all users controller:",
-        serviceResponse
-      );
 
       if (serviceResponse.success) {
         res
@@ -63,7 +55,7 @@ export class ProblemController {
   async addProblemController(req: Request, res: Response): Promise<void> {
     try {
       const data = req.body;
-      console.log("data", data);
+
       const result = await this._problemService.addProblem(data);
       if (result.success) {
         res.status(HTTP_STATUS.CREATED).json({
@@ -89,7 +81,7 @@ export class ProblemController {
   async updateProblemController(req: Request, res: Response): Promise<void> {
     try {
       const { problemId } = req.params;
-      console.log("problemId", problemId);
+
       const data = req.body;
 
       const result = await this._problemService.updateProblem(problemId, data);
@@ -117,9 +109,12 @@ export class ProblemController {
 
   getProblems = async (req: Request, res: Response) => {
     try {
-      const { query,difficulty } = req.query; 
-      const problems = await this._problemService.getVisibleProblems(query as string,difficulty as string);
-  
+      const { query, difficulty } = req.query;
+      const problems = await this._problemService.getVisibleProblems(
+        query as string,
+        difficulty as string
+      );
+
       res.json({
         success: true,
         message: "Problems fetched successfully",
@@ -127,20 +122,19 @@ export class ProblemController {
       });
     } catch (error) {
       console.error("Error in getProblems:", error);
-      res.status(500).json({
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: "Failed to fetch problems",
       });
     }
   };
-  
 
   async getSingleProblem(req: Request, res: Response): Promise<void> {
     try {
       const id = req.params.problemId;
 
       if (!id) {
-        res.status(400).json({
+        res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
           message: "Problem ID is required",
         });
@@ -150,21 +144,21 @@ export class ProblemController {
       const result = await this._problemService.getSingleProblem(id);
 
       if (!result || !result.problem) {
-        res.status(404).json({
+        res.status(HTTP_STATUS.NOT_FOUND).json({
           success: false,
           message: "Problem not found",
         });
         return;
       }
 
-      res.status(200).json({
+      res.status(HTTP_STATUS.OK).json({
         success: true,
         message: result.message,
         data: result.problem,
       });
     } catch (error) {
       console.error("Error in getSingleProblem:", error);
-      res.status(500).json({
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: "Failed to fetch problem",
       });
@@ -173,9 +167,8 @@ export class ProblemController {
 
   async toggleProblemStatus(req: Request, res: Response): Promise<void> {
     try {
-      console.log("enterdddd");
       const problemId = req.params.id;
-      console.log("problemId,", problemId);
+
       const response = await this._problemService.findOneProblem(problemId);
 
       if (!response) {

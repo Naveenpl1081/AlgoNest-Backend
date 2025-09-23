@@ -23,6 +23,7 @@ export class CategoryService implements ICategoryService {
         }
       console.log("service category", name);
       const newCategory = await this._categoryRepository.addCategory(name);
+      console.log(newCategory)
       return {
         success: true,
         message: "Category added successfully",

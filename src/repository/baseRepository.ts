@@ -15,7 +15,6 @@ export class BaseRepository<T extends Document> {
   }
 
   async create(data: Partial<T>) {
-    console.log("dataaa",data)
     const createDoc = await this.model.create(data);
     return await createDoc.save();
   }

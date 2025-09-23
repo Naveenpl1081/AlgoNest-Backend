@@ -39,6 +39,12 @@ import { IExecuteService } from "../interfaces/Iserveices/IexecuteService";
 import { ExecuteService } from "../services/executeService";
 import { IExecuteRepository } from "../interfaces/Irepositories/IexecuteRepository";
 import { ExecuteRepository } from "../repository/executeRepository";
+import { IOutputParser } from "../interfaces/Iexecute/IOutputPareser";
+import { OutputParser } from "../utils/outputParser";
+import { ICodeWrapper } from "../interfaces/Iexecute/ICodeWrapper";
+import { CodeWrapper } from "../utils/codeWrapper";
+import { ITestExecutor } from "../interfaces/Iexecute/ITestExecutor";
+import { TestExecutor } from "../utils/testExecutor";
 
 container.registerSingleton<IOTPService>("IOTPService", OTPService);
 container.registerSingleton<IUserRepository>("IUserRepository", UserRepository);
@@ -72,5 +78,9 @@ container.registerSingleton<ICategoryService>("ICategoryService",CategoryService
 container.registerSingleton<ICategoryRepository>("ICategoryRepository",CategoryRepository)
 container.registerSingleton<IExecuteService>("IExecuteService",ExecuteService)
 container.registerSingleton<IExecuteRepository>("IExecuteRepository",ExecuteRepository)
+container.registerSingleton<IOutputParser>("IOutputParser",OutputParser)
+container.registerSingleton<ICodeWrapper>("ICodeWrapper",CodeWrapper)
+container.registerSingleton<ITestExecutor>("ITestExecutor",TestExecutor)
+
 
 export { container };

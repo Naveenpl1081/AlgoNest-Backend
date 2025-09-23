@@ -1,28 +1,38 @@
 import { injectable } from "tsyringe";
 import { IExecuteRepository } from "../interfaces/Irepositories/IexecuteRepository";
-import { IRun } from "../interfaces/models/Irun";
+import { CreateRunDTO } from "../interfaces/models/IExecute";
 import { ExecutionModel } from "../models/executionSchema";
-
-
-interface CreateRunDTO {
-  userId: string;
-  problemId: string;
-  language: string;
-  code: string;
-  testResult: any;
-}
+import { RunDocument } from "../models/executionSchema";
+import { BaseRepository } from "./baseRepository";
 
 @injectable()
-export class ExecuteRepository implements IExecuteRepository {
-  async createRun(data: CreateRunDTO): Promise<IRun> {
-    const run = new ExecutionModel({
-      userId: data.userId,
-      problemId: data.problemId,
-      language: data.language,
-      code: data.code,
-      testResult: data.testResult,
+export class ExecuteRepository
+  extends BaseRepository<RunDocument>
+  implements IExecuteRepository
+{
+  constructor() {
+    super(ExecutionModel);
+  }
+
+  async createRun(data: CreateRunDTO): Promise<RunDocument> {
+    const runData = {
+      ...data,
       createdAt: new Date(),
-    });
-    return run.save();
+    };
+    return await this.create(runData);
+  }
+
+  async findRunsByProblemIdAndUserId(
+    userId: string,
+    problemId: string
+  ): Promise<RunDocument[]> {
+
+    const result = (await this.find(
+      { userId, problemId },
+      {
+        sort: { createdAt: -1 },
+      }
+    )) as RunDocument[];
+    return result;
   }
 }

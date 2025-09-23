@@ -1,12 +1,10 @@
-import { IRun } from "../models/Irun";
+import { RunDocument } from "../../models/executionSchema";
+import { CreateRunDTO } from "../models/IExecute";
+
+
 
 export interface IExecuteRepository {
-    createRun(data: {
-      userId: string;
-      problemId: string;
-      language: string;
-      code: string;
-      testResult: any;
-    }): Promise<IRun>; 
+  createRun(data: CreateRunDTO): Promise<RunDocument>
+  findRunsByProblemIdAndUserId(userId:string,problemId:string):Promise<RunDocument[]>
   }
   

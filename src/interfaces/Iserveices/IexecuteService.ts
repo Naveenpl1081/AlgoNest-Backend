@@ -1,7 +1,13 @@
 
-import { ExecuteRunDTO } from "../../services/executeService";
-import { IRun } from "../models/Irun";
+import { RunDocument } from "../../models/executionSchema";
+import { ExecuteRunDTO, ExecuteRunResponse, ExecuteSubmitResponse } from "../DTO/IServices/IExecuteService";
+
 
 export interface IExecuteService {
-    executeRun({ code, language, problemId, userId }: ExecuteRunDTO): Promise<IRun>
+    executeRun(dto: ExecuteRunDTO): Promise<ExecuteRunResponse>
+    executeSubmit(dto: ExecuteRunDTO): Promise<ExecuteSubmitResponse>
+    allSubmissionService(
+        userId: string,
+        problemId: string
+      ): Promise<RunDocument[] | null> 
 }

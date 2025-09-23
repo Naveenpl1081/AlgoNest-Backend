@@ -31,9 +31,10 @@ export class LinkedInService implements IAuthService {
       });
 
       console.log("Request params:", params.toString());
+      const linkedinTokenUrl = process.env.LINKEDIN_ACCESSTOKEN|| " ";
 
       const response = await fetch(
-        "https://www.linkedin.com/oauth/v2/accessToken",
+        linkedinTokenUrl,
         {
           method: "POST",
           headers: {
@@ -68,9 +69,10 @@ export class LinkedInService implements IAuthService {
   private async getLinkedInUserDataFromAPI(accessToken: string) {
     try {
       console.log("Getting LinkedIn user data from API...");
+      const linkedinUserInfo = process.env.LINKEDIN_USERINFO|| " ";
 
       const userInfoResponse = await fetch(
-        "https://api.linkedin.com/v2/userinfo",
+        linkedinUserInfo,
         {
           headers: { Authorization: `Bearer ${accessToken}` },
         }

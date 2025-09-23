@@ -1,79 +1,199 @@
 import { injectable, inject } from "tsyringe";
 import { IExecuteRepository } from "../interfaces/Irepositories/IexecuteRepository";
 import { IProblemRepository } from "../interfaces/Irepositories/IproblemRepository";
-import { dockerExecutor, ExecutionResult } from "../utils/dockerExecutor";
 import { IExecuteService } from "../interfaces/Iserveices/IexecuteService";
-import { IRun } from "../interfaces/models/Irun";
-
-
-export interface ExecuteRunDTO {
-  code: string;
-  language: string;
-  problemId: string;
-  userId: string;
-}
+import { RunDocument } from "../models/executionSchema";
+import { ExecuteRunDTO, ExecuteRunResponse, ExecuteSubmitResponse } from "../interfaces/DTO/IServices/IExecuteService";
+import { ITestExecutor } from "../interfaces/Iexecute/ITestExecutor";
 
 @injectable()
 export class ExecuteService implements IExecuteService {
   constructor(
-    @inject("IExecuteRepository") private _executeRepository: IExecuteRepository,
-    @inject("IProblemRepository") private _problemRepository: IProblemRepository
+    @inject("IExecuteRepository")
+    private _executeRepository: IExecuteRepository,
+    @inject("IProblemRepository")
+    private _problemRepository: IProblemRepository,
+    @inject("ITestExecutor") private _testExecutor: ITestExecutor
   ) {}
 
-  async executeRun(dto: ExecuteRunDTO): Promise<IRun> {
+  async executeSubmit(dto: ExecuteRunDTO): Promise<ExecuteSubmitResponse> {
     const { code, language, problemId, userId } = dto;
 
-    const problem = await this._problemRepository.findProblemById(problemId);
-    if (!problem) throw new Error("Problem not found");
+    try {
+      const problem = await this._problemRepository.findProblemById(problemId);
+      if (!problem) {
+        throw new Error("Problem not found");
+      }
 
-    const testCase = problem.testCases[0];
-    const wrappedCode = this.wrapCode(code, language, testCase, problem.functionName);
+      if (!problem.testCases || problem.testCases.length === 0) {
+        throw new Error("No test cases available");
+      }
 
-    console.log("wrappedCode",wrappedCode)
+      const testResults = [];
+      let overallConsoleOutput = "";
 
-    const executionResult: ExecutionResult = await dockerExecutor.runCode(
-      wrappedCode,
-      language,
-      Number(problem.timeLimit),
-      Number(problem.memoryLimit)
-    );
+      for (let i = 0; i < problem.testCases.length; i++) {
+        const testCase = problem.testCases[i];
+        console.log("testcases",testCase)
+        const result = await this._testExecutor.runSingleTest(
+          code,
+          language,
+          testCase,
+          problem.functionName,
+          Number(problem.timeLimit),
+          Number(problem.memoryLimit),
+          i + 1
+        );
 
-    console.log("executionResult",executionResult)
+        testResults.push(result);
 
-    const run = await this._executeRepository.createRun({
-      userId,
-      problemId,
-      language,
-      code,
-      testResult: executionResult,
-    });
+        if (result.consoleOutput && result.consoleOutput.trim()) {
+          if (overallConsoleOutput) {
+            overallConsoleOutput += "\n\n" + result.consoleOutput;
+          } else {
+            overallConsoleOutput = result.consoleOutput;
+          }
+        }
+      }
 
-    return run;
+      const passedTests = testResults.filter((result) => result.passed).length;
+      const totalTests = testResults.length;
+      const overallStatus = passedTests === totalTests ? "passed" : "failed";
+
+      const run = await this._executeRepository.createRun({
+        userId,
+        problemId,
+        language,
+        code,
+        testResults,
+        overallStatus,
+      });
+
+      return {
+        success: true,
+        testResults,
+        overallStatus,
+        runId: run._id?.toString() || "unknown",
+        consoleOutput: overallConsoleOutput,
+        summary: {
+          totalTests,
+          passedTests,
+          failedTests: totalTests - passedTests,
+        },
+      };
+    } catch (error) {
+      console.error("Execution error:", error);
+
+      try {
+        await this._executeRepository.createRun({
+          userId,
+          problemId,
+          language,
+          code,
+          testResults: [
+            {
+              caseNumber: 1,
+              input: "N/A",
+              output:
+                "System Error: " +
+                (error instanceof Error ? error.message : "Unknown error"),
+              expected: "N/A",
+              passed: false,
+              error: error instanceof Error ? error.message : "Unknown error",
+            },
+          ],
+          overallStatus: "error",
+        });
+      } catch (saveError) {
+        console.error("Failed to save error run:", saveError);
+      }
+
+      throw error;
+    }
   }
 
-  private wrapCode(code: string, language: string, testCase: any, functionName: string): string {
-    if (language === "javascript") {
-      return `
-${code}
+  async executeRun(dto: ExecuteRunDTO): Promise<ExecuteRunResponse> {
+    const { code, language, problemId, userId } = dto;
 
-const testCase = ${JSON.stringify(testCase)};
-function runTest() {
-  try {
-    const result = ${functionName}(...testCase.input);
-    if (JSON.stringify(result) === JSON.stringify(testCase.output)) {
-      console.log("TEST PASSED");
-    } else {
-      console.log("TEST FAILED");
-      console.log("Expected:", testCase.output);
-      console.log("Got:", result);
+   
+
+    try {
+      const problem = await this._problemRepository.findProblemById(problemId);
+      if (!problem) {
+        throw new Error("Problem not found");
+      }
+
+      const testCase = problem.testCases[0];
+      if (!testCase) {
+        throw new Error("No test cases available");
+      }
+
+      const result = await this._testExecutor.runSingleTest(
+        code,
+        language,
+        testCase,
+        problem.functionName,
+        Number(problem.timeLimit),
+        Number(problem.memoryLimit),
+        1
+      );
+
+   
+
+      return {
+        success: true,
+        testResults: [result],
+        overallStatus: result.passed ? "passed" : "failed",
+        consoleOutput: result.consoleOutput || "",
+      };
+    } catch (error) {
+      console.error("Execution error:", error);
+
+      try {
+        await this._executeRepository.createRun({
+          userId,
+          problemId,
+          language,
+          code,
+          testResults: [
+            {
+              caseNumber: 1,
+              input: "N/A",
+              output:
+                "System Error: " +
+                (error instanceof Error ? error.message : "Unknown error"),
+              expected: "N/A",
+              passed: false,
+              error: error instanceof Error ? error.message : "Unknown error",
+            },
+          ],
+          overallStatus: "error",
+        });
+      } catch (saveError) {
+        console.error("Failed to save error run:", saveError);
+      }
+
+      throw error;
     }
-  } catch (error) {
-    console.log("ERROR:", error.message);
   }
-}
-runTest();
-      `;
+
+  async allSubmissionService(
+    userId: string,
+    problemId: string
+  ): Promise<RunDocument[] | null> {
+    try {
+      const data = await this._executeRepository.findRunsByProblemIdAndUserId(
+        userId,
+        problemId
+      );
+      if (!data || data.length === 0) {
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error in allSubmissionService:", error);
+      throw error;
     }
-    throw new Error("Language not supported yet");
   }
 }

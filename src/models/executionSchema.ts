@@ -1,21 +1,49 @@
-import mongoose, { Schema, Document } from 'mongoose';
-import { IRun } from '../interfaces/models/Irun';
-
-
-
-export interface RunDocument extends IRun, Document {}
+import mongoose, { Schema, Document } from "mongoose";
+export interface RunDocument extends Document {
+  userId: string;
+  problemId: string;
+  language: string;
+  code: string;
+  testResults: Array<{
+    caseNumber: number;
+    input: string;
+    output: string;
+    expected: string;
+    passed: boolean;
+    error?: string;
+    executionTime?: number;
+    memoryUsed?: number;
+  }>;
+  overallStatus: 'passed' | 'failed' | 'error';
+  createdAt: Date;
+}
 
 const ExecutionSchema = new Schema<RunDocument>({
   userId: { type: String, required: true },
   problemId: { type: String, required: true },
   language: { type: String, required: true },
   code: { type: String, required: true },
-  testResult: {
-    status: { type: String, enum: ['success', 'error'], required: true },
-    output: { type: String },
+  testResults: [
+    {
+      caseNumber: { type: Number, required: true },
+      input: { type: String, required: true },
+      output: { type: String, required: false,default:"" },
+      expected: { type: String, required: true },
+      passed: { type: Boolean, required: true },
+      error: { type: String },
+      executionTime: { type: Number },
+      memoryUsed: { type: Number },
+    },
+  ],
+  overallStatus: {
+    type: String,
+    enum: ["passed", "failed", "error"],
+    required: true,
   },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
 });
 
-// Create and export the model
-export const ExecutionModel = mongoose.model<RunDocument>('Run', ExecutionSchema);
+export const ExecutionModel = mongoose.model<RunDocument>(
+  "Run",
+  ExecutionSchema
+);
