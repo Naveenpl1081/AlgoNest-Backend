@@ -16,7 +16,7 @@ const problemSchema: Schema<IProblem> = new Schema(
     constraints: { type: [String], default: [] },
     testCases: [
       {
-        input: { type: String, required: true },
+        input: { type: [String], required: true }, 
         output: { type: String, required: true },
       },
     ],
@@ -33,13 +33,13 @@ const problemSchema: Schema<IProblem> = new Schema(
       enum: ["Active", "InActive"],
       default: "Active",
     },
-    timeLimit:{
-      type:String,
-      required: true 
+    timeLimit: {
+      type: String,
+      required: true,
     },
-    memoryLimit:{
-      type:String,
-      required: true 
+    memoryLimit: {
+      type: String,
+      required: true,
     },
     parameters: [
       {

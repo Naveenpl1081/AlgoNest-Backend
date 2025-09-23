@@ -6,7 +6,6 @@ import {
   createSuccessResponse,
 } from "../utils/responseHelper";
 import { ICategoryService } from "../interfaces/Iserveices/IcategoryService";
-import { ICategory } from "../interfaces/models/Icategory";
 
 @injectable()
 export class CategoryController {
@@ -17,7 +16,7 @@ export class CategoryController {
   async addCategoryController(req: Request, res: Response): Promise<void> {
     try {
       const { name } = req.body;
-      console.log("dataaaa", name);
+
       const result = await this._categoryService.addCategory(name);
       if (result.success) {
         res.status(HTTP_STATUS.CREATED).json({
@@ -53,7 +52,6 @@ export class CategoryController {
 
   async categoryList(req: Request, res: Response): Promise<void> {
     try {
-      console.log("function fetching all the categories");
       const page = parseInt(req.query.page as string) || undefined;
       const limit = parseInt(req.query.limit as string) || undefined;
       const search = (req.query.search as string) || undefined;
@@ -62,11 +60,6 @@ export class CategoryController {
         limit,
         search,
       });
-
-      console.log(
-        "result from the fetching all users controller:",
-        serviceResponse
-      );
 
       if (serviceResponse.success) {
         res
@@ -93,12 +86,14 @@ export class CategoryController {
 
   async updateCategoryController(req: Request, res: Response): Promise<void> {
     try {
-      console.log("enterd in to updatecatecontrole")
-      const {categoryId}= req.params
-      console.log("categoryId",categoryId)
-      const data= req.body;
+      const { categoryId } = req.params;
 
-      const result = await this._categoryService.updateCategory(categoryId, data);
+      const data = req.body;
+
+      const result = await this._categoryService.updateCategory(
+        categoryId,
+        data
+      );
 
       if (result.success) {
         res.status(HTTP_STATUS.OK).json({
@@ -113,7 +108,10 @@ export class CategoryController {
       }
     } catch (error: unknown) {
       const err = error as Error;
-      console.error("Unhandled error in updateCategoryController:", err.message);
+      console.error(
+        "Unhandled error in updateCategoryController:",
+        err.message
+      );
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: "Internal server error",
@@ -123,9 +121,8 @@ export class CategoryController {
 
   async toggleCategoryStatus(req: Request, res: Response): Promise<void> {
     try {
-      console.log("enterdddd");
       const categoryId = req.params.id;
-      console.log("categoryId,", categoryId);
+
       const response = await this._categoryService.findOneCategory(categoryId);
 
       if (!response) {

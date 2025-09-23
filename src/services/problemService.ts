@@ -1,35 +1,37 @@
-import { injectable,inject } from "tsyringe";
+import { FilterQuery } from "mongoose";
+import { injectable, inject } from "tsyringe";
 import { IProblemRepository } from "../interfaces/Irepositories/IproblemRepository";
 import { IProblemService } from "../interfaces/Iserveices/IproblemService";
 import { IProblem, SingleProblemResponse } from "../interfaces/models/Iproblem";
 
-
 @injectable()
 export class ProblemService implements IProblemService {
-  constructor(@inject("IProblemRepository") private _problemRepository: IProblemRepository,) {}
+  constructor(
+    @inject("IProblemRepository") private _problemRepository: IProblemRepository
+  ) {}
   async getAllProblems(options: {
-    page?: number 
-    limit?: number 
+    page?: number;
+    limit?: number;
     search?: string;
     status?: string;
-    verified?:string
+    verified?: string;
   }): Promise<{
     success: boolean;
     message: string;
     data?: {
-          problems: IProblem[];
-          pagination: {
-            total: number;
-            page: number;
-            pages: number;
-            limit: number;
-            hasNextPage: boolean;
-            hasPrevPage: boolean;
-          };
-        }
+      problems: IProblem[];
+      pagination: {
+        total: number;
+        page: number;
+        pages: number;
+        limit: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+      };
+    };
   }> {
     try {
-      console.log("Function fetching all the users");
+      
       const page = options.page || 1;
       const limit = options.limit || 5;
       const result = await this._problemRepository.getAllProblems({
@@ -37,7 +39,7 @@ export class ProblemService implements IProblemService {
         limit,
         search: options.search,
         status: options.status,
-        verified:options.verified
+        verified: options.verified,
       });
 
       console.log("result from the problem service:", result);
@@ -66,10 +68,13 @@ export class ProblemService implements IProblemService {
     }
   }
 
-  async addProblem(problem: IProblem): Promise<{ success: boolean; message: string }> {
+  async addProblem(
+    problem: IProblem
+  ): Promise<{ success: boolean; message: string }> {
     try {
-      console.log("service prob",problem)
+      console.log("service prob", problem);
       const newProblem = await this._problemRepository.addProblem(problem);
+      console.log(newProblem);
       return {
         success: true,
         message: "Problem added successfully",
@@ -82,9 +87,14 @@ export class ProblemService implements IProblemService {
       };
     }
   }
-  async updateProblem(problemId: string, data: IProblem): Promise<{ success: boolean; message: string }> {
+  async updateProblem(
+    problemId: string,
+    data: IProblem
+  ): Promise<{ success: boolean; message: string }> {
     try {
-      const existingProblem = await this._problemRepository.findProblemById(problemId);
+      const existingProblem = await this._problemRepository.findProblemById(
+        problemId
+      );
       if (!existingProblem) {
         return { success: false, message: "Problem not found" };
       }
@@ -95,33 +105,38 @@ export class ProblemService implements IProblemService {
     } catch (error: unknown) {
       const err = error as Error;
       console.error("Error in updateProblem service:", err.message);
-      return { success: false, message: err.message || "Failed to update problem" };
+      return {
+        success: false,
+        message: err.message || "Failed to update problem",
+      };
     }
   }
 
-  async getVisibleProblems(query?: string,difficulty?:string): Promise<IProblem[]> {
+  async getVisibleProblems(
+    query?: string,
+    difficulty?: string
+  ): Promise<IProblem[]> {
     try {
-      const filter: any = { visible: true ,status:"Active"};
-  
+      const filter: FilterQuery<IProblem> = { visible: true, status: "Active" };
+
       if (query) {
         filter.$or = [
-          { title: { $regex: query, $options: 'i' } },
-          { description: { $regex: query, $options: 'i' } },
-          { problemId: query } 
+          { title: { $regex: query, $options: "i" } },
+          { description: { $regex: query, $options: "i" } },
+          { problemId: query },
         ];
       }
 
       if (difficulty) {
-        filter.difficulty = { $regex: `^${difficulty}$`, $options: 'i' };
+        filter.difficulty = { $regex: `^${difficulty}$`, $options: "i" };
       }
-  
+
       return await this._problemRepository.getVisibleProblems(filter);
     } catch (error) {
-      console.error('Error in service getVisibleProblems:', error);
-      throw new Error('Failed to fetch visible problems from service layer');
+      console.error("Error in service getVisibleProblems:", error);
+      throw new Error("Failed to fetch visible problems from service layer");
     }
   }
-  
 
   async getSingleProblem(id: string): Promise<SingleProblemResponse> {
     try {
@@ -164,7 +179,7 @@ export class ProblemService implements IProblemService {
           message: "problem not found",
         };
       }
-      const newStatus =problem.status === "Active" ? "InActive" : "Active";
+      const newStatus = problem.status === "Active" ? "InActive" : "Active";
       console.log("problemstauts", newStatus);
       const updatedProblem = await this._problemRepository.findProblemAndUpdate(
         problemId,

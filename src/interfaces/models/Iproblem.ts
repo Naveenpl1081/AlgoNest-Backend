@@ -10,7 +10,7 @@ export interface IProblem extends Document {
   category:Types.ObjectId
   constraints: string[];
   testCases: {
-    input: string;
+    input: string[];
     output: string;
   }[];  
   examples: {

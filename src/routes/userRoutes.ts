@@ -62,6 +62,8 @@ export class UserRoutes {
     this.router.get("/problems", problemController.getProblems.bind(problemController));
     this.router.get("/singleproblem/:problemId", problemController.getSingleProblem.bind(problemController));
     this.router.post("/runcode",authMiddleware.authenticate(Roles.USER),executeController.runCode.bind(executeController))
+    this.router.post("/submitcode",authMiddleware.authenticate(Roles.USER),executeController.submitCode.bind(executeController))
+    this.router.get("/allsubmissions/:problemId", authMiddleware.authenticate(Roles.USER),executeController.getAllSubmissions.bind(executeController));
   }
 
   public getRouter(): Router {

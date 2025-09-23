@@ -1,15 +1,20 @@
 export interface IRun {
-    userId: string;
-    problemId: string;
-    language: string;
-    code: string;
-    testResult: {
-      output?: string;         // Actual output from running the code
-      error?: string;          // Any runtime or compilation error
-      status: 'passed' | 'failed' | 'error'; // Overall test status
-      executionTime?: number;  // Time taken in ms (optional)
-      memoryUsed?: number;    // Memory used in MB (optional)
-    };
-    createdAt: Date;
-  }
+  _id?: string;
+  userId: string;
+  problemId: string;
+  language: string;
+  code: string;
+  testResults: Array<{
+    caseNumber: number;
+    input: string;
+    output: string;
+    expected: string;
+    passed: boolean;
+    error?: string;
+    executionTime?: number;
+    memoryUsed?: number;
+  }>;
+  overallStatus: 'passed' | 'failed' | 'error';
+  createdAt: Date;
+}
   

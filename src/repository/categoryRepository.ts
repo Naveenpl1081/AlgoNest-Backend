@@ -1,5 +1,4 @@
-import { IProblemRepository } from "../interfaces/Irepositories/IproblemRepository";
-import { IProblem } from "../interfaces/models/Iproblem";
+
 import { BaseRepository } from "../repository/baseRepository";
 import Category from "../models/categorySchema";
 import { FilterQuery, Types } from "mongoose";
@@ -111,14 +110,14 @@ export class CategoryRepository
     data: Partial<ICategory>
   ): Promise<ICategory | null> {
     try {
-      // Validate ObjectId format
+
       if (!categoryId || categoryId.length !== 24) {
         throw new Error("Invalid category ID format");
       }
       
-      // Remove _id from update data to prevent conflicts
+     
       const { _id, ...updateData } = data;
-      
+      console.log(_id)
       const updatedCategory = await this.updateOne(
         new Types.ObjectId(categoryId),
         updateData

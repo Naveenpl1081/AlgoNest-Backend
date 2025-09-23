@@ -12,22 +12,20 @@ export class GitHubService implements IAuthService {
   ) {}
 
   private async getGitHubAccessToken(code: string) {
+    const githubTokenUrl = process.env.GITHUB_TOKEN_URL || " ";
     try {
-      const response = await fetch(
-        "https://github.com/login/oauth/access_token",
-        {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            client_id: process.env.GITHUB_CLIENT_ID,
-            client_secret: process.env.GITHUB_CLIENT_SECRET,
-            code: code,
-          }),
-        }
-      );
+      const response = await fetch(githubTokenUrl, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          client_id: process.env.GITHUB_CLIENT_ID,
+          client_secret: process.env.GITHUB_CLIENT_SECRET,
+          code: code,
+        }),
+      });
 
       const data = await response.json();
       console.log("GitHub token response:", data);
@@ -39,8 +37,10 @@ export class GitHubService implements IAuthService {
   }
 
   async getGitHubUserData(accessToken: string) {
+    const githubUserUrl = process.env.GITHUB_USER_URL || " ";
+    const githubEmailsUrl = process.env.GITHUB_USER_EMAILS_URL || " ";
     try {
-      const response = await fetch("https://api.github.com/user", {
+      const response = await fetch(githubUserUrl, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           Accept: "application/vnd.github.v3+json",
@@ -59,16 +59,13 @@ export class GitHubService implements IAuthService {
 
       if (!userData.email) {
         try {
-          const emailResponse = await fetch(
-            "https://api.github.com/user/emails",
-            {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                Accept: "application/vnd.github.v3+json",
-                "User-Agent": "YourAppName",
-              },
-            }
-          );
+          const emailResponse = await fetch(githubEmailsUrl, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              Accept: "application/vnd.github.v3+json",
+              "User-Agent": "YourAppName",
+            },
+          });
 
           if (emailResponse.ok) {
             const emails = await emailResponse.json();
