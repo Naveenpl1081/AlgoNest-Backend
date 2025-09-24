@@ -1,4 +1,4 @@
-import { OtpPurpose } from "../../config/otpConfig";
+import { OtpPurpose } from "../../config/otp.config";
 
 export interface IEmailService {
   sendMail(options: {

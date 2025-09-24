@@ -7,4 +7,3 @@ export enum OtpPurpose {
   FORGOT_PASSWORD = "FORGOT_PASSWORD",
 }
 export const OTP_EXPIRY_SECONDS = process.env.OTP_EXPIRY_SECONDS;
-export const TEMP_USER_EXPIRY_SECONDS = 1 * 60;

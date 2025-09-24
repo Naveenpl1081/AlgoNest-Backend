@@ -3,7 +3,7 @@ export interface IOTPRedis {
   setOTP(
     email: string,
     data: IReddisPayload,
-    ttlSeconds: number
+    ttlSeconds: string
   ): Promise<void>;
   getOTP(email: string): Promise<IReddisPayload | null>;
   deleteOTP(email: string): Promise<void>;

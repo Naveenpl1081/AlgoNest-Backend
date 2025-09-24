@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import dotenv from 'dotenv';
 dotenv.config();
-import connectDb from './config/database';
+import connectDb from './config/db.config';
 import { App } from './app';
 
 export class Server {

@@ -14,7 +14,7 @@ export class OtpRedisService implements IOTPRedis {
   async setOTP(
     email: string,
     data: IReddisPayload,
-    ttlSeconds: number
+    ttlSeconds: string
   ): Promise<void> {
     await redis.set(this.key(email), JSON.stringify(data), "EX", ttlSeconds);
 
