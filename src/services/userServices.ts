@@ -1,8 +1,7 @@
-import { OtpPurpose, TEMP_USER_EXPIRY_SECONDS } from "../config/otpConfig";
+import { OtpPurpose, OTP_EXPIRY_SECONDS } from "../config/otp.config";
 import { UpdateProfileDTO } from "../interfaces/DTO/IServices/IUserServise";
 import { IUser, UserProfile } from "../interfaces/models/Iuser";
 import { uploadToCloudinary } from "../utils/cloudinary";
-
 import { Roles } from "../config/roles";
 import {
   LoginUserData,
@@ -76,7 +75,7 @@ export class UserService implements IUserService {
       await this._otpRedisService.setOTP(
         email,
         redisPayload,
-        TEMP_USER_EXPIRY_SECONDS
+        OTP_EXPIRY_SECONDS!
       );
 
       return {
@@ -205,7 +204,7 @@ export class UserService implements IUserService {
       await this._otpRedisService.setOTP(
         email,
         { ...redisData, otp },
-        TEMP_USER_EXPIRY_SECONDS
+        OTP_EXPIRY_SECONDS!
       );
 
       return {
@@ -246,7 +245,7 @@ export class UserService implements IUserService {
       await this._otpRedisService.setOTP(
         email,
         redisPayload,
-        TEMP_USER_EXPIRY_SECONDS
+        OTP_EXPIRY_SECONDS!
       );
 
       return { success: true, message: "OTP sent to your email.", email };

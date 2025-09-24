@@ -1,5 +1,5 @@
 import { Document } from "mongodb";
-import { OtpPurpose } from "../../config/otpConfig";
+import { OtpPurpose } from "../../config/otp.config";
 export interface IOtp extends Document {
   _id: string;
   email: string;

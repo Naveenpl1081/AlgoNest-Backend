@@ -1,5 +1,5 @@
-import transporter from "../config/mailTransporter";
-import { OtpPurpose } from "../config/otpConfig";
+import transporter from "../config/mailTransporter.config";
+import { OtpPurpose } from "../config/otp.config";
 import { SendEmailOptions } from "../interfaces/DTO/IServices/IUserServise";
 import { IEmailService } from "../interfaces/Iserveices/IEmailService";
 
