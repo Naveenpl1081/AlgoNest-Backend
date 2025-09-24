@@ -4,6 +4,10 @@ import { ICategoryRepository } from "../interfaces/Irepositories/IcategoryReposi
 import { ICategoryService } from "../interfaces/Iserveices/IcategoryService";
 
 import { ICategory } from "../interfaces/models/Icategory";
+import {
+  CategoryPaginatedResponse,
+  CategoryListResponse,
+} from "../interfaces/DTO/IServices/ICategoryService";
 
 @injectable()
 export class CategoryService implements ICategoryService {
@@ -15,15 +19,14 @@ export class CategoryService implements ICategoryService {
     name: string
   ): Promise<{ success: boolean; message: string }> {
     try {
-
-        const existing = await this._categoryRepository.findCategoryByName(name);
-        console.log("existong",existing)
-        if (existing) {
-          return { success: false, message: "Category already exists" };
-        }
+      const existing = await this._categoryRepository.findCategoryByName(name);
+      console.log("existong", existing);
+      if (existing) {
+        return { success: false, message: "Category already exists" };
+      }
       console.log("service category", name);
       const newCategory = await this._categoryRepository.addCategory(name);
-      console.log(newCategory)
+      console.log(newCategory);
       return {
         success: true,
         message: "Category added successfully",
@@ -37,66 +40,55 @@ export class CategoryService implements ICategoryService {
     }
   }
 
-  async getCategories(): Promise<{success:boolean,message:string,data?:ICategory[]}> {
+  async getCategories(): Promise<CategoryPaginatedResponse> {
     try {
-        const allCategories = await this._categoryRepository.getAllCategories();
-        return {
-            success:true,
-            message:"succefully loaded",
-            data:allCategories
-        }
+      const allCategories = await this._categoryRepository.getAllCategories();
+      return {
+        success: true,
+        message: "succefully loaded",
+        data: allCategories,
+      };
     } catch (error) {
-        const err = error as Error;
-        return {
-          success: false,
-          message: err.message || "Failed to add category",
-        };
+      const err = error as Error;
+      return {
+        success: false,
+        message: err.message || "Failed to add category",
+      };
     }
-    
   }
   async getAllCategoryList(options: {
-    page?: number 
-    limit?: number 
+    page?: number;
+    limit?: number;
     search?: string;
-  }): Promise<{
-    success: boolean;
-    message: string;
-    data?: {
-          categories: ICategory[];
-          pagination: {
-            total: number;
-            page: number;
-            pages: number;
-            limit: number;
-            hasNextPage: boolean;
-            hasPrevPage: boolean;
-          };
-        }
-  }> {
+  }): Promise<CategoryListResponse> {
     try {
       console.log("Function fetching all the users");
-      const page = options.page || 1;
-      const limit = options.limit || 5;
+      const page = options.page;
+      const limit = options.limit;
       const result = await this._categoryRepository.getAllCategoryList({
         page,
         limit,
-        search: options.search
+        search: options.search,
       });
 
       console.log("result from the problem service:", result);
+      const categories = result.data.map((cat) => ({
+        name: cat.name,
+        status: cat.status,
+      }));
 
       return {
         success: true,
         message: "problems fetched successfully",
         data: {
-          categories: result.data,
+          categories,
           pagination: {
             total: result.total,
             page: result.page,
             pages: result.pages,
-            limit: limit,
+            limit: result.limit,
             hasNextPage: result.page < result.pages,
-            hasPrevPage: page > 1,
+            hasPrevPage: result.page > 1,
           },
         },
       };
@@ -109,9 +101,14 @@ export class CategoryService implements ICategoryService {
     }
   }
 
-  async updateCategory(categoryId: string, data: ICategory): Promise<{ success: boolean; message: string }> {
+  async updateCategory(
+    categoryId: string,
+    data: ICategory
+  ): Promise<{ success: boolean; message: string }> {
     try {
-      const existingProblem = await this._categoryRepository.findCategoryById(categoryId);
+      const existingProblem = await this._categoryRepository.findCategoryById(
+        categoryId
+      );
       if (!existingProblem) {
         return { success: false, message: "Category not found" };
       }
@@ -122,7 +119,10 @@ export class CategoryService implements ICategoryService {
     } catch (error: unknown) {
       const err = error as Error;
       console.error("Error in updateCategory service:", err.message);
-      return { success: false, message: err.message || "Failed to update category" };
+      return {
+        success: false,
+        message: err.message || "Failed to update category",
+      };
     }
   }
 
@@ -135,7 +135,9 @@ export class CategoryService implements ICategoryService {
     };
   }> {
     try {
-      const category = await this._categoryRepository.findCategoryById(categoryId);
+      const category = await this._categoryRepository.findCategoryById(
+        categoryId
+      );
 
       if (!category) {
         return {
@@ -143,12 +145,13 @@ export class CategoryService implements ICategoryService {
           message: "category not found",
         };
       }
-      const newStatus =category.status === "Active" ? "InActive" : "Active";
+      const newStatus = category.status === "Active" ? "InActive" : "Active";
       console.log("categorystauts", newStatus);
-      const updatedCategory = await this._categoryRepository.findCategoryAndUpdate(
-        categoryId,
-        newStatus
-      );
+      const updatedCategory =
+        await this._categoryRepository.findCategoryAndUpdate(
+          categoryId,
+          newStatus
+        );
       console.log("updatedCategory", updatedCategory);
       if (!updatedCategory) {
         return {

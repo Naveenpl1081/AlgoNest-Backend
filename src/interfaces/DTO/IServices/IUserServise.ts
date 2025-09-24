@@ -58,3 +58,35 @@ export interface FindUsersPaginatedParams {
   sortOrder?: "asc" | "desc";
 }
 
+
+
+export interface IUserResponse {
+  _id: string; 
+  username: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  github?: string;
+  linkedin?: string;
+  profileImage?: string;
+  status: string;
+  isVerified?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+
+export interface IUserProfileResponse {
+  id: string; 
+  username: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  github?: string;
+  linkedin?: string;
+  profileImage?: string;
+  status: string;
+  isVerified?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}

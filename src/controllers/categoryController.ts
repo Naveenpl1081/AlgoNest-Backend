@@ -52,9 +52,15 @@ export class CategoryController {
 
   async categoryList(req: Request, res: Response): Promise<void> {
     try {
-      const page = parseInt(req.query.page as string) || undefined;
-      const limit = parseInt(req.query.limit as string) || undefined;
-      const search = (req.query.search as string) || undefined;
+      const page = req.query.page
+        ? parseInt(req.query.page as string)
+        : undefined;
+      const limit = req.query.limit
+        ? parseInt(req.query.limit as string)
+        : undefined;
+      const search = req.query.search
+        ? (req.query.search as string)
+        : undefined;
       const serviceResponse = await this._categoryService.getAllCategoryList({
         page,
         limit,

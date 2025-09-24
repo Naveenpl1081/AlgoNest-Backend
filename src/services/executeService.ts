@@ -3,8 +3,13 @@ import { IExecuteRepository } from "../interfaces/Irepositories/IexecuteReposito
 import { IProblemRepository } from "../interfaces/Irepositories/IproblemRepository";
 import { IExecuteService } from "../interfaces/Iserveices/IexecuteService";
 import { RunDocument } from "../models/executionSchema";
-import { ExecuteRunDTO, ExecuteRunResponse, ExecuteSubmitResponse } from "../interfaces/DTO/IServices/IExecuteService";
+import {
+  ExecuteRunDTO,
+  ExecuteRunResponse,
+  ExecuteSubmitResponse,
+} from "../interfaces/DTO/IServices/IExecuteService";
 import { ITestExecutor } from "../interfaces/Iexecute/ITestExecutor";
+import { IRunResponse } from "../interfaces/DTO/IServices/ISubmissionService";
 
 @injectable()
 export class ExecuteService implements IExecuteService {
@@ -34,7 +39,7 @@ export class ExecuteService implements IExecuteService {
 
       for (let i = 0; i < problem.testCases.length; i++) {
         const testCase = problem.testCases[i];
-        console.log("testcases",testCase)
+        console.log("testcases", testCase);
         const result = await this._testExecutor.runSingleTest(
           code,
           language,
@@ -114,9 +119,6 @@ export class ExecuteService implements IExecuteService {
 
   async executeRun(dto: ExecuteRunDTO): Promise<ExecuteRunResponse> {
     const { code, language, problemId, userId } = dto;
-
-   
-
     try {
       const problem = await this._problemRepository.findProblemById(problemId);
       if (!problem) {
@@ -137,8 +139,6 @@ export class ExecuteService implements IExecuteService {
         Number(problem.memoryLimit),
         1
       );
-
-   
 
       return {
         success: true,
@@ -180,7 +180,7 @@ export class ExecuteService implements IExecuteService {
   async allSubmissionService(
     userId: string,
     problemId: string
-  ): Promise<RunDocument[] | null> {
+  ): Promise<IRunResponse[] | null> {
     try {
       const data = await this._executeRepository.findRunsByProblemIdAndUserId(
         userId,
@@ -189,8 +189,26 @@ export class ExecuteService implements IExecuteService {
       if (!data || data.length === 0) {
         return null;
       }
+      const mappedData: IRunResponse[] = data.map((run) => ({
+        userId: run.userId,
+        problemId: run.problemId,
+        language: run.language,
+        code: run.code,
+        testResults: run.testResults.map((test) => ({
+          caseNumber: test.caseNumber,
+          input: test.input,
+          output: test.output,
+          expected: test.expected,
+          passed: test.passed,
+          error: test.error,
+          executionTime: test.executionTime,
+          memoryUsed: test.memoryUsed,
+        })),
+        overallStatus: run.overallStatus,
+        createdAt: run.createdAt,
+      }));
 
-      return data;
+      return mappedData;
     } catch (error) {
       console.error("Error in allSubmissionService:", error);
       throw error;

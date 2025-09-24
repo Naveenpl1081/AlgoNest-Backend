@@ -1,8 +1,13 @@
 import { FilterQuery } from "mongoose";
 import { injectable, inject } from "tsyringe";
+import {
+  IProblemResponse,
+  ProblemListResponse,
+} from "../interfaces/DTO/IServices/IProblemServise";
 import { IProblemRepository } from "../interfaces/Irepositories/IproblemRepository";
 import { IProblemService } from "../interfaces/Iserveices/IproblemService";
-import { IProblem, SingleProblemResponse } from "../interfaces/models/Iproblem";
+import { IProblem } from "../interfaces/models/Iproblem";
+import { SingleProblemResponse } from "../interfaces/DTO/IServices/IProblemServise";
 
 @injectable()
 export class ProblemService implements IProblemService {
@@ -15,25 +20,11 @@ export class ProblemService implements IProblemService {
     search?: string;
     status?: string;
     verified?: string;
-  }): Promise<{
-    success: boolean;
-    message: string;
-    data?: {
-      problems: IProblem[];
-      pagination: {
-        total: number;
-        page: number;
-        pages: number;
-        limit: number;
-        hasNextPage: boolean;
-        hasPrevPage: boolean;
-      };
-    };
-  }> {
+  }): Promise<ProblemListResponse> {
     try {
-      
       const page = options.page || 1;
       const limit = options.limit || 5;
+
       const result = await this._problemRepository.getAllProblems({
         page,
         limit,
@@ -42,18 +33,52 @@ export class ProblemService implements IProblemService {
         verified: options.verified,
       });
 
-      console.log("result from the problem service:", result);
+      const problems: IProblemResponse[] = result.data.map((problem) => ({
+        _id: problem._id.toString(),
+        problemId: problem.problemId,
+        title: problem.title,
+        description: problem.description,
+        difficulty: problem.difficulty,
+        tags: problem.tags,
+        category: problem.category.toString(),
+        constraints: problem.constraints,
+        testCases: problem.testCases.map((tc) => ({
+          input: tc.input,
+          output: tc.output,
+        })),
+        examples: problem.examples.map((ex) => ({
+          input: ex.input,
+          output: ex.output,
+          explanation: ex.explanation,
+        })),
+        functionName: problem.functionName,
+        status: problem.status,
+        timeLimit: problem.timeLimit,
+        memoryLimit: problem.memoryLimit,
+        parameters: problem.parameters.map((param) => ({
+          name: param.name,
+          type: param.type,
+        })),
+        returnType: problem.returnType,
+        isPremium: problem.isPremium,
+        visible: problem.visible,
+        solution: problem.solution,
+        starterCode: problem.starterCode,
+        hints: problem.hints,
+        createdAt: problem.createdAt,
+        updatedAt: problem.updatedAt,
+      }));
 
       return {
         success: true,
-        message: "problems fetched successfully",
+        message: "Problems fetched successfully",
         data: {
-          problems: result.data,
+          problems,
           pagination: {
             total: result.total,
             page: result.page,
             pages: result.pages,
-            limit: limit,
+            limit,
             hasNextPage: result.page < result.pages,
             hasPrevPage: page > 1,
           },
@@ -62,7 +87,7 @@ export class ProblemService implements IProblemService {
     } catch (error) {
       console.error("Error in problem:", error);
       return {
-        message: "failed to create problem",
+        message: "Failed to fetch problems",
         success: false,
       };
     }
@@ -73,6 +98,20 @@ export class ProblemService implements IProblemService {
   ): Promise<{ success: boolean; message: string }> {
     try {
       console.log("service prob", problem);
+
+      const existingProblem =
+        await this._problemRepository.checkDuplicateProblem(
+          problem.title,
+          problem.problemId
+        );
+      console.log("existingProblem", existingProblem);
+
+      if (existingProblem) {
+        return {
+          success: false,
+          message: "Problem already exists with the same title or problem ID",
+        };
+      }
       const newProblem = await this._problemRepository.addProblem(problem);
       console.log(newProblem);
       return {

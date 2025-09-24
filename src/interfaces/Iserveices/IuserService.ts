@@ -1,10 +1,11 @@
 import {
+  IUserProfileResponse,
   LoginResponse,
   TempUserResponse,
   UpdateProfileDTO,
 } from "../DTO/IServices/IUserServise";
 import { SignupUserData, LoginUserData } from "../DTO/IServices/IUserServise";
-import { IUser, UserProfile } from "../models/Iuser";
+import { IUser, UserListResponse, UserProfile } from "../models/Iuser";
 
 export interface IUserService {
   userSignUp(data: SignupUserData): Promise<TempUserResponse>;
@@ -22,27 +23,13 @@ export interface IUserService {
     newPassword: string
   ): Promise<{ success: boolean; message: string }>;
   getUserProfile(userId: string): Promise<UserProfile>;
-  updateProfile(data: UpdateProfileDTO): Promise<IUser | null>;
+  updateProfile(data: UpdateProfileDTO): Promise<IUserProfileResponse | null>
   getAllUsers(options: {
     page?: number;
     limit?: number;
     search?: string;
     status?: string;
-  }): Promise<{
-    success: boolean;
-    message: string;
-    data?: {
-      users: IUser[];
-      pagination: {
-        total: number;
-        page: number;
-        pages: number;
-        limit: number;
-        hasNextPage: boolean;
-        hasPrevPage: boolean;
-      };
-    };
-  }>;
+  }): Promise<UserListResponse>
   findOneUser(userId: string): Promise<{
     success: boolean;
     message: string;

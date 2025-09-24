@@ -1,5 +1,7 @@
-import { OtpPurpose,OTP_EXPIRY_SECONDS} from "../config/otp.config";
+import { OtpPurpose, OTP_EXPIRY_SECONDS } from "../config/otp.config";
 import { SendEmailOptions } from "../interfaces/DTO/IServices/IUserServise";
+import { IApplicantResponse } from "../interfaces/DTO/IServices/IApplicantService";
+import { IRecruiterProfileResponse } from "../interfaces/DTO/IServices/IRecruiterService";
 
 import { Roles } from "../config/roles";
 import {
@@ -8,6 +10,7 @@ import {
   TempUserResponse,
 } from "../interfaces/DTO/IServices/IUserServise";
 import {
+  IRecruiterResponse,
   LoginRecruiterResponse,
   submitQualificationData,
 } from "../interfaces/DTO/IServices/IRecruiterService";
@@ -19,7 +22,10 @@ import { IEmailService } from "../interfaces/Iserveices/IEmailService";
 import { IOTPRedis } from "../interfaces/Iredis/IOTPRedis";
 import { IJwtService } from "../interfaces/IJwt/Ijwt";
 import { IRecruiterService } from "../interfaces/Iserveices/IrecruiterService";
-import { IRecruiter } from "../interfaces/models/Irecruiter";
+import {
+  IRecruiter,
+  RecruiterListResponse,
+} from "../interfaces/models/Irecruiter";
 import { IApplicants } from "../interfaces/models/Irecruiter";
 
 @injectable()
@@ -331,25 +337,11 @@ export class RecruiterService implements IRecruiterService {
     search?: string;
     status?: string;
     company?: string;
-  }): Promise<{
-    success: boolean;
-    message: string;
-    data?: {
-      users: IRecruiter[];
-      pagination: {
-        total: number;
-        page: number;
-        pages: number;
-        limit: number;
-        hasNextPage: boolean;
-        hasPrevPage: boolean;
-      };
-    };
-  }> {
+  }): Promise<RecruiterListResponse> {
     try {
-      console.log("Function fetching all the users");
       const page = options.page || 1;
       const limit = options.limit || 5;
+
       const result = await this._recruiterRepository.getAllRecruiters({
         page,
         limit,
@@ -358,18 +350,32 @@ export class RecruiterService implements IRecruiterService {
         company: options.company,
       });
 
-      console.log("result from the user service:", result);
+      const recruiters: IRecruiterResponse[] = result.data.map((rec) => ({
+        _id: rec._id.toString(),
+        username: rec.username,
+        email: rec.email,
+        isVerified: rec.isVerified,
+        emailVerify: rec.emailVerify,
+        status: rec.status,
+        companyName: rec.companyName,
+        companyType: rec.companyType,
+        yearEstablished: rec.yearEstablished,
+        phone: rec.phone,
+        registrationCertificate: rec.registrationCertificate,
+        createdAt: rec.createdAt,
+        updatedAt: rec.updatedAt,
+      }));
 
       return {
         success: true,
         message: "Users fetched successfully",
         data: {
-          users: result.data,
+          users: recruiters,
           pagination: {
             total: result.total,
             page: result.page,
             pages: result.pages,
-            limit: limit,
+            limit,
             hasNextPage: result.page < result.pages,
             hasPrevPage: page > 1,
           },
@@ -410,7 +416,7 @@ export class RecruiterService implements IRecruiterService {
     success: boolean;
     message: string;
     data?: {
-      users: IApplicants[];
+      users: IApplicantResponse[];
       pagination: {
         total: number;
         page: number;
@@ -425,22 +431,42 @@ export class RecruiterService implements IRecruiterService {
       console.log("Function fetching all the users");
       const page = options.page || 1;
       const limit = options.limit || 5;
+
       const result = await this._recruiterRepository.getAllApplicants({
         page,
         limit,
       });
+
       console.log("result from the user service:", result);
+
+      const mappedApplicants: IApplicantResponse[] = result.data.map(
+        (app: IApplicants) => ({
+          id: app._id.toString(),
+          username: app.username,
+          email: app.email,
+          isVerified: app.isVerified,
+          emailVerify: app.emailVerify,
+          status: app.status,
+          companyName: app.companyName,
+          companyType: app.companyType,
+          yearEstablished: app.yearEstablished,
+          phone: app.phone,
+          registrationCertificate: app.registrationCertificate,
+          createdAt: app.createdAt,
+          updatedAt: app.updatedAt,
+        })
+      );
 
       return {
         success: true,
         message: "Users fetched successfully",
         data: {
-          users: result.data,
+          users: mappedApplicants,
           pagination: {
             total: result.total,
             page: result.page,
             pages: result.pages,
-            limit: limit,
+            limit,
             hasNextPage: result.page < result.pages,
             hasPrevPage: page > 1,
           },
@@ -454,6 +480,7 @@ export class RecruiterService implements IRecruiterService {
       };
     }
   }
+
   async acceptApplicant(
     applicantId: string
   ): Promise<{ success: boolean; message: string }> {
@@ -519,7 +546,9 @@ export class RecruiterService implements IRecruiterService {
     }
   }
 
-  async getRecruiterProfile(recruiterId: string): Promise<Partial<IRecruiter>> {
+  async getRecruiterProfile(
+    recruiterId: string
+  ): Promise<Partial<IRecruiterProfileResponse>> {
     console.log("Recruiter profile service reached");
     const recruiter = await this._recruiterRepository.findById(recruiterId);
 

@@ -1,4 +1,5 @@
 import { Document } from "mongoose";
+import { IUserResponse } from "../DTO/IServices/IUserServise";
 
 export interface IUser extends Document {
   _id: string;
@@ -25,4 +26,20 @@ export interface UserProfile {
   github?: string;
   linkedin?: string;
   profileImage?: string;
+}
+
+export interface UserListResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    users: IUserResponse[];
+    pagination: {
+      total: number;
+      page: number;
+      pages: number;
+      limit: number;
+      hasNextPage: boolean;
+      hasPrevPage: boolean;
+    };
+  };
 }

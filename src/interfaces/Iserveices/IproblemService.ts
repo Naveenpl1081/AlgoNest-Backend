@@ -1,4 +1,6 @@
-import { IProblem, SingleProblemResponse } from "../models/Iproblem";
+import { IProblemResponse, ProblemListResponse } from "../DTO/IServices/IProblemServise";
+import { IProblem } from "../models/Iproblem";
+import { SingleProblemResponse } from "../DTO/IServices/IProblemServise";
 
 export interface IProblemService{
     getAllProblems(options: {
@@ -7,21 +9,7 @@ export interface IProblemService{
         status?:string;
         search?:string
         verified?:string
-      }): Promise<{
-        success: boolean;
-        message: string;
-        data?: {
-          problems: IProblem[];
-          pagination: {
-            total: number;
-            page: number;
-            pages: number;
-            limit: number;
-            hasNextPage: boolean;
-            hasPrevPage: boolean;
-          };
-        };
-      }>;
+      }): Promise<ProblemListResponse>;
       addProblem(problem: IProblem): Promise<{ success: boolean; message: string }>
       updateProblem(problemId: string, data: IProblem): Promise<{ success: boolean; message: string }>
       getVisibleProblems(query?: string,difficulty?:string): Promise<IProblem[]>

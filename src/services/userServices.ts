@@ -1,8 +1,13 @@
 import { OtpPurpose, OTP_EXPIRY_SECONDS } from "../config/otp.config";
-import { UpdateProfileDTO } from "../interfaces/DTO/IServices/IUserServise";
+import {
+  IUserResponse,
+  UpdateProfileDTO,
+} from "../interfaces/DTO/IServices/IUserServise";
 import { IUser, UserProfile } from "../interfaces/models/Iuser";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import { Roles } from "../config/roles";
+import { UserListResponse } from "../interfaces/models/Iuser";
+import { IUserProfileResponse } from "../interfaces/DTO/IServices/IUserServise";
 import {
   LoginUserData,
   SignupUserData,
@@ -294,7 +299,9 @@ export class UserService implements IUserService {
     };
   }
 
-  async updateProfile(data: UpdateProfileDTO): Promise<IUser | null> {
+  async updateProfile(
+    data: UpdateProfileDTO
+  ): Promise<IUserProfileResponse | null> {
     console.log("changed data", data);
     const { userId, firstName, lastName, github, linkedin, profileImage } =
       data;
@@ -318,7 +325,23 @@ export class UserService implements IUserService {
         userId,
         updatedFields
       );
-      return updatedUser;
+
+      if (!updatedUser) return null;
+
+      return {
+        id: updatedUser._id.toString(),
+        username: updatedUser.username,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        github: updatedUser.github,
+        linkedin: updatedUser.linkedin,
+        profileImage: updatedUser.profileImage,
+        status: updatedUser.status,
+        isVerified: updatedUser.isVerified,
+        createdAt: updatedUser.createdAt,
+        updatedAt: updatedUser.updatedAt,
+      };
     } catch (error) {
       console.error("Error updating profile:", error);
       throw new Error("Profile update failed");
@@ -330,25 +353,12 @@ export class UserService implements IUserService {
     limit?: number;
     search?: string;
     status?: string;
-  }): Promise<{
-    success: boolean;
-    message: string;
-    data?: {
-      users: IUser[];
-      pagination: {
-        total: number;
-        page: number;
-        pages: number;
-        limit: number;
-        hasNextPage: boolean;
-        hasPrevPage: boolean;
-      };
-    };
-  }> {
+  }): Promise<UserListResponse> {
     try {
       console.log("Function fetching all the users");
       const page = options.page || 1;
       const limit = options.limit || 5;
+
       const result = await this._userRepository.getAllUsers({
         page,
         limit,
@@ -358,29 +368,45 @@ export class UserService implements IUserService {
 
       console.log("result from the user service:", result);
 
+      const mappedUsers: IUserResponse[] = result.data.map((user: IUser) => ({
+        _id: user._id.toString(),
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        github: user.github,
+        linkedin: user.linkedin,
+        profileImage: user.profileImage,
+        status: user.status,
+        isVerified: user.isVerified,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      }));
+
       return {
         success: true,
         message: "Users fetched successfully",
         data: {
-          users: result.data,
+          users: mappedUsers,
           pagination: {
             total: result.total,
             page: result.page,
             pages: result.pages,
-            limit: limit,
+            limit,
             hasNextPage: result.page < result.pages,
             hasPrevPage: page > 1,
           },
         },
       };
     } catch (error) {
-      console.error("Error in userSignUp:", error);
+      console.error("Error in getAllUsers:", error);
       return {
-        message: "failed to create user",
         success: false,
+        message: "Failed to fetch users",
       };
     }
   }
+
   async findOneUser(userId: string): Promise<{
     success: boolean;
     message: string;

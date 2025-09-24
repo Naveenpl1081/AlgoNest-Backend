@@ -1,8 +1,9 @@
 import { LoginResponse, TempUserResponse } from "../DTO/IServices/IUserServise";
 import { SignupUserData, LoginUserData } from "../DTO/IServices/IUserServise";
-import { submitQualificationData } from "../DTO/IServices/IRecruiterService";
-import { IRecruiter } from "../models/Irecruiter";
+import { IRecruiterProfileResponse, submitQualificationData } from "../DTO/IServices/IRecruiterService";
+import { IRecruiter, RecruiterListResponse } from "../models/Irecruiter";
 import { IApplicants } from "../models/Irecruiter";
+import { IApplicantResponse } from "../DTO/IServices/IApplicantService";
 export interface IRecruiterService {
   recruiterSignUp(data: SignupUserData): Promise<TempUserResponse>;
   verifyOtp(
@@ -36,27 +37,13 @@ export interface IRecruiterService {
     search?: string;
     status?: string;
     company?: string;
-  }): Promise<{
-    success: boolean;
-    message: string;
-    data?: {
-      users: IRecruiter[];
-      pagination: {
-        total: number;
-        page: number;
-        pages: number;
-        limit: number;
-        hasNextPage: boolean;
-        hasPrevPage: boolean;
-      };
-    };
-  }>;
+  }): Promise<RecruiterListResponse>
   findOneRecruiter(recruiterId: string): Promise<IRecruiter | null>;
   getAllApplicants(options: { page?: number; limit?: number }): Promise<{
     success: boolean;
     message: string;
     data?: {
-      users: IApplicants[];
+      users: IApplicantResponse[];
       pagination: {
         total: number;
         page: number;
@@ -66,7 +53,7 @@ export interface IRecruiterService {
         hasPrevPage: boolean;
       };
     };
-  }>;
+  }> 
   acceptApplicant(
     applicantId: string
   ): Promise<{ success: boolean; message: string }>;
@@ -74,5 +61,5 @@ export interface IRecruiterService {
     applicantId: string,
     data: string
   ): Promise<{ success: boolean; message: string }>;
-  getRecruiterProfile(recruiterId: string): Promise<Partial<IRecruiter>>;
+  getRecruiterProfile(recruiterId: string): Promise<Partial<IRecruiterProfileResponse>>
 }

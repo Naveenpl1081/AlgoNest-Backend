@@ -1,8 +1,9 @@
 import { Model, Document, FilterQuery, UpdateQuery, SortOrder } from "mongoose";
+import { IBaseRepository } from "../interfaces/Irepositories/IbaseRepository";
 import { ICategory } from "../interfaces/models/Icategory";
 type PopulateOption = { path: string; select?: string };
 
-export class BaseRepository<T extends Document> {
+export class BaseRepository<T extends Document> implements IBaseRepository<T> {
   protected model: Model<T>;
 
   constructor(model: Model<T>) {
@@ -25,8 +26,8 @@ export class BaseRepository<T extends Document> {
     return user;
   }
 
-  async findAll():Promise<ICategory[]>{
-    return this.model.find({status:"Active"})
+  async findAll(): Promise<T[]> {
+    return this.model.find({ status: "Active" });
   }
 
   async find(

@@ -1,7 +1,9 @@
 // interfaces/models/IRecruiter.ts
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
+import { IRecruiterResponse } from "../DTO/IServices/IRecruiterService";
 
 export interface IRecruiter extends Document {
+  _id: string | Types.ObjectId;
   username: string;
   email: string;
   password: string;
@@ -19,6 +21,7 @@ export interface IRecruiter extends Document {
 
 
 export interface IApplicants extends Document {
+  _id: Types.ObjectId; 
   username: string;
   email: string;
   isVerified?: boolean;
@@ -32,4 +35,21 @@ export interface IApplicants extends Document {
   registrationCertificate?: string; 
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+
+export interface RecruiterListResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    users: IRecruiterResponse[];
+    pagination: {
+      total: number;
+      page: number;
+      pages: number;
+      limit: number;
+      hasNextPage: boolean;
+      hasPrevPage: boolean;
+    };
+  };
 }

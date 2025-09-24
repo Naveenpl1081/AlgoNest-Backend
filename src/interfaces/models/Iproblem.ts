@@ -40,8 +40,3 @@ export interface IProblem extends Document {
 
 
 
-export interface SingleProblemResponse {
-  message: string;
-  success: boolean;
-  problem?: IProblem;
-}

@@ -23,4 +23,5 @@ export interface IProblemRepository {
     categoryId: string,
     status: "Active" | "InActive"
   ): Promise<IProblem | null> 
+  checkDuplicateProblem(title: string, problemId: string): Promise<boolean>
 }

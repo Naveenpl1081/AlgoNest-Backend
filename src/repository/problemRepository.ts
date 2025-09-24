@@ -16,7 +16,7 @@ export class ProblemRepository
     limit?: number;
     search?: string;
     status?: string;
-    verified?:string
+    verified?: string;
   }): Promise<{
     data: IProblem[];
     total: number;
@@ -68,11 +68,31 @@ export class ProblemRepository
     };
   }
 
+  async checkDuplicateProblem(
+    title: string,
+    problemId: string
+  ): Promise<boolean> {
+    try {
+      const filter: FilterQuery<IProblem> = {
+        $or: [
+          { title: { $regex: new RegExp(`^${title}$`, "i") } },
+          { problemId: { $regex: new RegExp(`^${problemId}$`, "i") } },
+        ],
+      };
+
+      const existingProblem = await this.findOne(filter);
+      return !!existingProblem;
+    } catch (error) {
+      console.error("Error checking duplicate problem:", error);
+      throw new Error("Error checking duplicate problem");
+    }
+  }
+
   async addProblem(problem: Partial<IProblem>): Promise<IProblem> {
     try {
       const { _id, ...problemWithoutId } = problem;
       const cleanProblem = _id ? problem : problemWithoutId;
-      
+
       const newProblem = await this.create(cleanProblem);
 
       return newProblem;
@@ -83,11 +103,10 @@ export class ProblemRepository
   }
   async findProblemById(problemId: string): Promise<IProblem | null> {
     try {
-     
       if (!problemId || problemId.length !== 24) {
         throw new Error("Invalid problem ID format");
       }
-      
+
       const problem = await this.findById(problemId);
       return problem;
     } catch (error) {
@@ -101,20 +120,18 @@ export class ProblemRepository
     data: Partial<IProblem>
   ): Promise<IProblem | null> {
     try {
-    
       if (!problemId || problemId.length !== 24) {
         throw new Error("Invalid problem ID format");
       }
-      
-      
+
       const { _id, ...updateData } = data;
-      console.log(_id)
-      
+      console.log(_id);
+
       const updatedProblem = await this.updateOne(
         new Types.ObjectId(problemId),
         updateData
       );
-      
+
       if (!updatedProblem) {
         return null;
       }
@@ -125,17 +142,21 @@ export class ProblemRepository
     }
   }
 
-  async getVisibleProblems(filter: FilterQuery<IProblem> = {}): Promise<IProblem[]> {
+  async getVisibleProblems(
+    filter: FilterQuery<IProblem> = {}
+  ): Promise<IProblem[]> {
     try {
       return await Problem.find(filter)
-        .populate('category', 'name')
-        .select('problemId title description difficulty category tags isPremium createdAt updatedAt')
+        .populate("category", "name")
+        .select(
+          "problemId title description difficulty category tags isPremium createdAt updatedAt"
+        )
         .sort({ createdAt: -1 })
         .lean()
         .exec();
     } catch (error) {
-      console.error('Error in getVisibleProblems:', error);
-      throw new Error('Failed to fetch visible problems');
+      console.error("Error in getVisibleProblems:", error);
+      throw new Error("Failed to fetch visible problems");
     }
   }
 
@@ -155,5 +176,4 @@ export class ProblemRepository
       return null;
     }
   }
-  
-  }
+}
