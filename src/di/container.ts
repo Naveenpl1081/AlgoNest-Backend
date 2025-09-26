@@ -45,6 +45,10 @@ import { ICodeWrapper } from "../interfaces/Iexecute/ICodeWrapper";
 import { CodeWrapper } from "../utils/codeWrapper";
 import { ITestExecutor } from "../interfaces/Iexecute/ITestExecutor";
 import { TestExecutor } from "../utils/testExecutor";
+import { AIService } from "../services/aiServices";
+import { IAIService } from "../interfaces/Iserveices/IaiService";
+import { IAIRepository } from "../interfaces/Irepositories/IaiRepository";
+import { AIRepository } from "../repository/aiRepository";
 
 container.registerSingleton<IOTPService>("IOTPService", OTPService);
 container.registerSingleton<IUserRepository>("IUserRepository", UserRepository);
@@ -81,6 +85,8 @@ container.registerSingleton<IExecuteRepository>("IExecuteRepository",ExecuteRepo
 container.registerSingleton<IOutputParser>("IOutputParser",OutputParser)
 container.registerSingleton<ICodeWrapper>("ICodeWrapper",CodeWrapper)
 container.registerSingleton<ITestExecutor>("ITestExecutor",TestExecutor)
+container.registerSingleton<IAIService>("IAIService",AIService)
+container.registerSingleton<IAIRepository>("IAIRepository",AIRepository)
 
 
 export { container };

@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { inject, injectable } from "tsyringe";
 import { IExecuteService } from "../interfaces/Iserveices/IexecuteService";
+import { AppError } from "../interfaces/models/IAppError";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
 import { HTTP_STATUS } from "../utils/httpStatus";
 
@@ -233,4 +234,30 @@ export class ExecuteController {
       });
     }
   }
+
+  async stats(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      console.log("Reached stats controller");
+  
+      const userId = req.user?.id;
+      console.log("userId",userId)
+      if (!userId) {
+        res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json({ message: "User ID missing from token." });
+        return;
+      }
+  
+      const stats = await this._executeService.getUserStats(userId);
+  
+      res.status(HTTP_STATUS.OK).json({ success: true, data: stats });
+    } catch (err: unknown) {
+      const error = err as AppError;
+      console.error("Stats error:", error);
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ error: error.message || "Something went wrong." });
+    }
+  }
+  
 }

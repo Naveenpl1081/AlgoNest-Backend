@@ -176,4 +176,27 @@ export class ProblemRepository
       return null;
     }
   }
+  async countByDifficulty(difficulty: "Easy" | "Medium" | "Hard"): Promise<number> {
+    return this.model.countDocuments({ difficulty }).exec();
+  }
+  async getSolvedProblems(problemIds: string[]): Promise<IProblem[]> {
+    console.log("getSolvedProblems called with:", problemIds);
+    if (!problemIds || problemIds.length === 0) {
+      console.log("No problem IDs provided");
+      return [];
+    }
+    
+    let result = await this.model.find({ problemId: { $in: problemIds } }).exec();
+    if (result.length === 0) {
+      console.log("No results with problemId field, trying _id field");
+      result = await this.model.find({ _id: { $in: problemIds } }).exec();
+    }
+    if (result.length === 0) {
+      console.log("No results with _id field, trying id field");
+      result = await this.model.find({ id: { $in: problemIds } }).exec();
+    }
+    
+    console.log("Final result:", result);
+    return result;
+  }
 }

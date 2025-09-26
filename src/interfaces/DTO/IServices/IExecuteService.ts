@@ -42,5 +42,13 @@ export interface ExecuteRunDTO {
       failedTests: number;
     };
   }
+
+  export interface IRecentSubmission {
+    problemId: string;
+    problemTitle?: string;
+    difficulty?: string;
+    overallStatus: string;
+    createdAt: Date;
+  }
   
   
