@@ -7,6 +7,7 @@ import { upload } from "../middleware/multer";
 import { Roles } from "../config/roles";
 import { ProblemController } from "../controllers/problemController";
 import { ExecuteController } from "../controllers/executeController";
+import { AiController } from "../controllers/aiController";
 
 export class UserRoutes {
   private router: Router;
@@ -20,8 +21,9 @@ export class UserRoutes {
     const userController = container.resolve(UserController);
     const authController = container.resolve(AuthController);
     const authMiddleware = container.resolve(AuthMiddleware);
-    const problemController=container.resolve(ProblemController)
-    const executeController=container.resolve(ExecuteController)
+    const problemController = container.resolve(ProblemController);
+    const executeController = container.resolve(ExecuteController);
+    const aiController = container.resolve(AiController);
 
     this.router.post("/signup", userController.register.bind(userController));
     this.router.post(
@@ -29,8 +31,14 @@ export class UserRoutes {
       userController.verifyOtp.bind(userController)
     );
     this.router.post("/login", userController.login.bind(userController));
-    this.router.post("/github/callback", userController.githubCallback.bind(userController));
-    this.router.get("/linkedin/callback", userController.linkedinCallback.bind(userController));
+    this.router.post(
+      "/github/callback",
+      userController.githubCallback.bind(userController)
+    );
+    this.router.get(
+      "/linkedin/callback",
+      userController.linkedinCallback.bind(userController)
+    );
     this.router.post(
       "/resend-otp",
       userController.resendOtp.bind(userController)
@@ -52,6 +60,11 @@ export class UserRoutes {
       authMiddleware.authenticate(Roles.USER),
       userController.profile.bind(userController)
     );
+    this.router.get(
+      "/user-stats",
+      authMiddleware.authenticate(Roles.USER),
+      executeController.stats.bind(executeController)
+    );
     this.router.patch(
       "/edit-profile",
       authMiddleware.authenticate(Roles.USER),
@@ -59,13 +72,35 @@ export class UserRoutes {
       userController.updateProfile.bind(userController)
     );
     this.router.post("/logout", userController.logout.bind(userController));
-    this.router.get("/problems", problemController.getProblems.bind(problemController));
-    this.router.get("/singleproblem/:problemId", problemController.getSingleProblem.bind(problemController));
-    this.router.post("/runcode",authMiddleware.authenticate(Roles.USER),executeController.runCode.bind(executeController))
-    this.router.post("/submitcode",authMiddleware.authenticate(Roles.USER),executeController.submitCode.bind(executeController))
-    this.router.get("/allsubmissions/:problemId", authMiddleware.authenticate(Roles.USER),executeController.getAllSubmissions.bind(executeController));
+    this.router.get(
+      "/problems",
+      problemController.getProblems.bind(problemController)
+    );
+    this.router.get(
+      "/singleproblem/:problemId",
+      problemController.getSingleProblem.bind(problemController)
+    );
+    this.router.post(
+      "/runcode",
+      authMiddleware.authenticate(Roles.USER),
+      executeController.runCode.bind(executeController)
+    );
+    this.router.post(
+      "/submitcode",
+      authMiddleware.authenticate(Roles.USER),
+      executeController.submitCode.bind(executeController)
+    );
+    this.router.get(
+      "/allsubmissions/:problemId",
+      authMiddleware.authenticate(Roles.USER),
+      executeController.getAllSubmissions.bind(executeController)
+    );
+    this.router.post(
+      "/aidebugger",
+      authMiddleware.authenticate(Roles.USER),
+      aiController.explainError.bind(aiController)
+    );
   }
-
   public getRouter(): Router {
     return this.router;
   }

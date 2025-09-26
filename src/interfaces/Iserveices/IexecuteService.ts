@@ -1,7 +1,8 @@
 
-import { RunDocument } from "../../models/executionSchema";
+
 import { ExecuteRunDTO, ExecuteRunResponse, ExecuteSubmitResponse } from "../DTO/IServices/IExecuteService";
 import { IRunResponse } from "../DTO/IServices/ISubmissionService";
+import { IUserStats } from "../DTO/IServices/IUserServise";
 
 
 export interface IExecuteService {
@@ -11,4 +12,5 @@ export interface IExecuteService {
       userId: string,
       problemId: string
     ): Promise<IRunResponse[] | null>
+    getUserStats(userId: string):Promise<IUserStats>
 }

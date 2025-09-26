@@ -24,4 +24,6 @@ export interface IProblemRepository {
     status: "Active" | "InActive"
   ): Promise<IProblem | null> 
   checkDuplicateProblem(title: string, problemId: string): Promise<boolean>
+  countByDifficulty(difficulty: "Easy" | "Medium" | "Hard"): Promise<number>
+  getSolvedProblems(problemIds: string[]): Promise<IProblem[]>
 }

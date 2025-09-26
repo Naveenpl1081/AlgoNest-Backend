@@ -26,7 +26,6 @@ export class ExecuteRepository
     userId: string,
     problemId: string
   ): Promise<RunDocument[]> {
-
     const result = (await this.find(
       { userId, problemId },
       {
@@ -34,5 +33,10 @@ export class ExecuteRepository
       }
     )) as RunDocument[];
     return result;
+  }
+
+  async findUserRuns(userId: string): Promise<RunDocument[]> {
+    const runs = (await this.find({ userId }, { sort: { createdAt: -1 } })) as RunDocument[];
+    return runs || [];
   }
 }

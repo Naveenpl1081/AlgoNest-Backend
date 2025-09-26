@@ -1,4 +1,5 @@
 import { IUser } from "../../models/Iuser";
+import { IRecentSubmission } from "./IExecuteService";
 
 export interface SignupUserData {
   username: string;
@@ -89,4 +90,27 @@ export interface IUserProfileResponse {
   isVerified?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+
+export interface IUserStats {
+  problemsSolved: number;
+  acceptanceRate: number; 
+  currentStreak: number; 
+  totalSubmissions: number;
+  totalProblems: number;
+  attempting: number;
+  easy: {
+    solved: number;
+    total: number;
+  };
+  medium: {
+    solved: number;
+    total: number;
+  };
+  hard: {
+    solved: number;
+    total: number;
+  };
+  recentSubmissions: IRecentSubmission[];
 }
