@@ -25,6 +25,8 @@ export class AIService implements IAIService {
         problemStatement: params.problemStatement?.trim() || "Debug this code"
       };
 
+      console.log("cleaned params",cleanedParams)
+
     
       if (!cleanedParams.code) {
         throw new Error("Code cannot be empty");
