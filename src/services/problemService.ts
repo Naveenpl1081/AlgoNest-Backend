@@ -99,6 +99,10 @@ export class ProblemService implements IProblemService {
     try {
       console.log("service prob", problem);
 
+      if(!problem.returnType){
+        return {success:false,message:"fill parameters return type"}
+      }
+
       const existingProblem =
         await this._problemRepository.checkDuplicateProblem(
           problem.title,
@@ -114,6 +118,8 @@ export class ProblemService implements IProblemService {
       }
       const newProblem = await this._problemRepository.addProblem(problem);
       console.log(newProblem);
+
+      
       return {
         success: true,
         message: "Problem added successfully",

@@ -8,6 +8,8 @@ import { Roles } from "../config/roles";
 import { ProblemController } from "../controllers/problemController";
 import { ExecuteController } from "../controllers/executeController";
 import { AiController } from "../controllers/aiController";
+import { AITutorController } from "../controllers/AiTutorCntroller";
+import { JobController } from "../controllers/jobController";
 
 export class UserRoutes {
   private router: Router;
@@ -24,6 +26,8 @@ export class UserRoutes {
     const problemController = container.resolve(ProblemController);
     const executeController = container.resolve(ExecuteController);
     const aiController = container.resolve(AiController);
+    const aiTutorController=container.resolve(AITutorController)
+    const jobController=container.resolve(JobController)
 
     this.router.post("/signup", userController.register.bind(userController));
     this.router.post(
@@ -99,6 +103,16 @@ export class UserRoutes {
       "/aidebugger",
       authMiddleware.authenticate(Roles.USER),
       aiController.explainError.bind(aiController)
+    );
+    this.router.post(
+      "/aitutor",
+      authMiddleware.authenticate(Roles.USER),
+      aiTutorController.chat.bind(aiTutorController)
+    );
+    this.router.get(
+      "/alljobpost",
+      authMiddleware.authenticate(Roles.USER),
+      jobController.getAllJobDetails.bind(jobController)
     );
   }
   public getRouter(): Router {

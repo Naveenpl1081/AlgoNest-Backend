@@ -5,6 +5,7 @@ import { RecruiterController } from "../controllers/recruiterController";
 import { AuthMiddleware } from "../middleware/authMiddleware";
 import { Roles } from "../config/roles";
 import { upload } from "../middleware/multer";
+import { JobController } from "../controllers/jobController";
 
 export class RecruiterRoutes {
   private router: Router;
@@ -18,6 +19,7 @@ export class RecruiterRoutes {
     const authMiddleware = container.resolve(AuthMiddleware);
     const recruiterController = container.resolve(RecruiterController);
     const authController = container.resolve(AuthController);
+    const jobController = container.resolve(JobController);
     this.router.post(
       "/signup",
       recruiterController.register.bind(recruiterController)
@@ -58,7 +60,31 @@ export class RecruiterRoutes {
       authMiddleware.authenticate(Roles.RECRUITER),
       recruiterController.profile.bind(recruiterController)
     );
-    this.router.post("/logout", recruiterController.logout.bind(recruiterController));
+    this.router.post(
+      "/logout",
+      recruiterController.logout.bind(recruiterController)
+    );
+
+    this.router.post(
+      "/jobpost",
+      authMiddleware.authenticate(Roles.RECRUITER),
+      jobController.addJob.bind(jobController)
+    );
+    this.router.get(
+      "/alljobpost",
+      authMiddleware.authenticate(Roles.RECRUITER),
+      jobController.getAllJobs.bind(jobController)
+    );
+    this.router.put(
+      "/updatejobpost/:jobId",
+      authMiddleware.authenticate(Roles.RECRUITER),
+      jobController.updateJobController.bind(jobController));
+      this.router.patch(
+        "/jobstatus/:id",
+        jobController.toggleJobStatus.bind(jobController)
+      );
+    
+    
   }
   public getRouter(): Router {
     return this.router;

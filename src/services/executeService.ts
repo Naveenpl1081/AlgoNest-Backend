@@ -218,80 +218,102 @@ export class ExecuteService implements IExecuteService {
 
   async getUserStats(userId: string): Promise<IUserStats> {
     console.log("reached getUserStats");
-    const submissions = await this._executeRepository.findUserRuns(userId) ?? [];
+    const submissions =
+      (await this._executeRepository.findUserRuns(userId)) ?? [];
     const totalSubmissions = submissions.length;
-    
+
     // Sort submissions by date (most recent first)
-    const sortedSubmissions = submissions.sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    const sortedSubmissions = submissions.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-    
+
     const solvedProblems = new Set(
       submissions
-        .filter(s => s?.overallStatus === "passed")
-        .map(s => s.problemId)
+        .filter((s) => s?.overallStatus === "passed")
+        .map((s) => s.problemId)
     );
     const problemsSolved = solvedProblems.size;
-    
-    const acceptanceRate = totalSubmissions > 0
-      ? Math.round((problemsSolved / totalSubmissions) * 100)
-      : 0;
-    
+
+    const acceptanceRate =
+      totalSubmissions > 0
+        ? Math.round((problemsSolved / totalSubmissions) * 100)
+        : 0;
+
     const attemptingProblems = new Set(
       submissions
-        .filter(s => s?.overallStatus !== "passed" && !solvedProblems.has(s.problemId))
-        .map(s => s.problemId)
+        .filter(
+          (s) =>
+            s?.overallStatus !== "passed" && !solvedProblems.has(s.problemId)
+        )
+        .map((s) => s.problemId)
     );
     const attempting = attemptingProblems.size;
     const currentStreak = this.calculateStreak(submissions);
-    
+
     const [easyTotal, mediumTotal, hardTotal] = await Promise.all([
       this._problemRepository.countByDifficulty("Easy"),
       this._problemRepository.countByDifficulty("Medium"),
       this._problemRepository.countByDifficulty("Hard"),
     ]);
     const totalProblems = easyTotal + mediumTotal + hardTotal;
-    
+
     // Get recent unique problems (remove duplicates, keep most recent submission for each problem)
-    const recentUniqueSubmissions = this.getRecentUniqueProblems(sortedSubmissions, 3);
-    const recentProblemIds = recentUniqueSubmissions.map(s => s.problemId);
-    
+    const recentUniqueSubmissions = this.getRecentUniqueProblems(
+      sortedSubmissions,
+      3
+    );
+    const recentProblemIds = recentUniqueSubmissions.map((s) => s.problemId);
+
     // Get all unique problem IDs (both solved and recent)
-    const allProblemIds = Array.from(new Set([...Array.from(solvedProblems), ...recentProblemIds]));
-    
+    const allProblemIds = Array.from(
+      new Set([...Array.from(solvedProblems), ...recentProblemIds])
+    );
+
     console.log("Searching for problem IDs:", allProblemIds);
-    const allProblemDocs = await this._problemRepository.getSolvedProblems(allProblemIds);
+    const allProblemDocs = await this._problemRepository.getSolvedProblems(
+      allProblemIds
+    );
     console.log("Found problem docs:", allProblemDocs);
-    
+
     // Create a map for quick problem lookup
     const problemMap = new Map();
-    allProblemDocs.forEach(problem => {
-      const id =  problem._id;
+    allProblemDocs.forEach((problem) => {
+      const id = problem._id;
       if (id) problemMap.set(id.toString(), problem);
     });
-    
+
     // Calculate solved by difficulty
-    const solvedProblemDocs = allProblemDocs.filter(p => {
-      const id =  p._id ;
+    const solvedProblemDocs = allProblemDocs.filter((p) => {
+      const id = p._id;
       return id && solvedProblems.has(id.toString());
     });
-    
-    const easySolved = solvedProblemDocs.filter(p => p.difficulty === "Easy").length;
-    const mediumSolved = solvedProblemDocs.filter(p => p.difficulty === "Medium").length;
-    const hardSolved = solvedProblemDocs.filter(p => p.difficulty === "Hard").length;
-  
+
+    const easySolved = solvedProblemDocs.filter(
+      (p) => p.difficulty === "Easy"
+    ).length;
+    const mediumSolved = solvedProblemDocs.filter(
+      (p) => p.difficulty === "Medium"
+    ).length;
+    const hardSolved = solvedProblemDocs.filter(
+      (p) => p.difficulty === "Hard"
+    ).length;
+
     // Build recent submissions with problem details
-    const recentSubmissions: IRecentSubmission[] = recentUniqueSubmissions.map(run => {
-      const problem = problemMap.get(run.problemId);
-      return {
-        problemId: run.problemId,
-        problemTitle: problem?.title || problem?.name || `Problem ${run.problemId}`,
-        difficulty: problem?.difficulty || "Unknown",
-        overallStatus: run.overallStatus,
-        createdAt: run.createdAt
-      };
-    });
-    
+    const recentSubmissions: IRecentSubmission[] = recentUniqueSubmissions.map(
+      (run) => {
+        const problem = problemMap.get(run.problemId);
+        return {
+          problemId: run.problemId,
+          problemTitle:
+            problem?.title || problem?.name || `Problem ${run.problemId}`,
+          difficulty: problem?.difficulty || "Unknown",
+          overallStatus: run.overallStatus,
+          createdAt: run.createdAt,
+        };
+      }
+    );
+
     return {
       problemsSolved,
       acceptanceRate,
@@ -305,23 +327,26 @@ export class ExecuteService implements IExecuteService {
       recentSubmissions,
     };
   }
-  
+
   // Helper method to get recent unique problems (removes duplicates)
-  private getRecentUniqueProblems(sortedSubmissions: any[], limit: number = 3): any[] {
+  private getRecentUniqueProblems(
+    sortedSubmissions: any[],
+    limit: number = 3
+  ): any[] {
     const uniqueProblems = new Map();
-    
+
     // Iterate through sorted submissions and keep only the most recent submission for each unique problem
     for (const submission of sortedSubmissions) {
       if (!uniqueProblems.has(submission.problemId)) {
         uniqueProblems.set(submission.problemId, submission);
-        
+
         // Stop when we have enough unique problems
         if (uniqueProblems.size >= limit) {
           break;
         }
       }
     }
-    
+
     // Convert map values back to array and maintain chronological order
     return Array.from(uniqueProblems.values());
   }
@@ -336,9 +361,9 @@ export class ExecuteService implements IExecuteService {
     );
 
     let streak = 0;
-    let currentDate = new Date();
+    const currentDate = new Date();
 
-    for (let date of uniqueDates) {
+    for (const date of uniqueDates) {
       if (new Date(date).toDateString() === currentDate.toDateString()) {
         streak++;
         currentDate.setDate(currentDate.getDate() - 1);

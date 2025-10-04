@@ -18,7 +18,7 @@ export class AiController {
           error: {
             type: "VALIDATION_ERROR",
             message: "Code is required",
-            userMessage: "🚫 Please provide your code to get debugging help.",
+            userMessage: " Please provide your code to get debugging help.",
             suggestions: [
               "Paste your complete code in the 'code' field",
               "Make sure your code is not empty",
@@ -34,7 +34,7 @@ export class AiController {
           error: {
             type: "VALIDATION_ERROR",
             message: "Problem statement is required",
-            userMessage: "🚫 Please describe what your code is supposed to do.",
+            userMessage: " Please describe what your code is supposed to do.",
             suggestions: [
               "Explain the problem you're trying to solve",
               "Describe the expected behavior",
@@ -51,7 +51,7 @@ export class AiController {
             type: "VALIDATION_ERROR",
             message: "Code is too long",
             userMessage:
-              "🚫 Please provide code that is less than 20,000 characters.",
+              " Please provide code that is less than 20,000 characters.",
             suggestions: [
               "Focus on the problematic part of your code",
               "Remove unnecessary comments or debug statements",
@@ -69,7 +69,7 @@ export class AiController {
 
       const responseTime = Date.now() - startTime;
 
-      console.log("📤 Sending to frontend:", {
+      console.log("Sending to frontend:", {
         explanation: analysis.explanation?.substring(0, 100) + "...",
         suggestedFix: analysis.suggestedFix?.substring(0, 100) + "...",
         confidence: analysis.confidence,
@@ -104,7 +104,7 @@ export class AiController {
             type: "RATE_LIMITED",
             message: err.message,
             userMessage:
-              "⏰ AI service is temporarily busy. Please try again in a minute.",
+              " AI service is temporarily busy. Please try again in a minute.",
             retryAfter: err.retryAfter || 60,
             suggestions: [
               "Wait a minute before trying again",
@@ -157,7 +157,7 @@ export class AiController {
           type: "INTERNAL_SERVER_ERROR",
           message: "An unexpected error occurred",
           userMessage:
-            "❌ Something went wrong while analyzing your code. Please try again.",
+            " Something went wrong while analyzing your code. Please try again.",
           suggestions: [
             "Try submitting your request again",
             "Simplify your code if it's very complex",

@@ -98,6 +98,8 @@ export class TestExecutor implements ITestExecutor {
       executionResult.output || ""
     );
 
+    console.log("parsedResult",parsedResult)
+
     return {
       caseNumber,
       input: Array.isArray(testCase.input)

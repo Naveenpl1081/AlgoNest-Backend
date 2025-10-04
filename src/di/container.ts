@@ -49,6 +49,14 @@ import { AIService } from "../services/aiServices";
 import { IAIService } from "../interfaces/Iserveices/IaiService";
 import { IAIRepository } from "../interfaces/Irepositories/IaiRepository";
 import { AIRepository } from "../repository/aiRepository";
+import { IJobRepository } from "../interfaces/Irepositories/IjobRepository";
+import { JobRepository } from "../repository/jobRepository";
+import { IJobService } from "../interfaces/Iserveices/IjobService";
+import { JobService } from "../services/jobService";
+import { IAITutorRepository } from "../interfaces/Irepositories/IaiTutorRepository";
+import { AITutorRepository } from "../repository/AiTutorRepository";
+import { IAITutorService } from "../interfaces/Iserveices/IaiTutorService";
+import { AITutorService } from "../services/AiTutorService";
 
 container.registerSingleton<IOTPService>("IOTPService", OTPService);
 container.registerSingleton<IUserRepository>("IUserRepository", UserRepository);
@@ -87,6 +95,11 @@ container.registerSingleton<ICodeWrapper>("ICodeWrapper",CodeWrapper)
 container.registerSingleton<ITestExecutor>("ITestExecutor",TestExecutor)
 container.registerSingleton<IAIService>("IAIService",AIService)
 container.registerSingleton<IAIRepository>("IAIRepository",AIRepository)
+container.registerSingleton<IJobRepository>("IJobRepository",JobRepository)
+container.registerSingleton<IJobService>("IJobService",JobService)
+container.registerSingleton<IAITutorRepository>("IAITutorRepository",AITutorRepository)
+container.registerSingleton<IAITutorService>("IAITutorService",AITutorService)
+
 
 
 export { container };
