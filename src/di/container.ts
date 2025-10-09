@@ -26,7 +26,6 @@ import { IAdminRepository } from "../interfaces/Irepositories/IadminRepository";
 import { AdminRepository } from "../repository/adminRepository";
 import { IAdminService } from "../interfaces/Iserveices/IadminService";
 import { AdminService } from "../services/adminServices";
-
 import { ProblemRepository } from "../repository/problemRepository";
 import { IProblemRepository } from "../interfaces/Irepositories/IproblemRepository";
 import { IProblemService } from "../interfaces/Iserveices/IproblemService";
@@ -57,6 +56,15 @@ import { IAITutorRepository } from "../interfaces/Irepositories/IaiTutorReposito
 import { AITutorRepository } from "../repository/AiTutorRepository";
 import { IAITutorService } from "../interfaces/Iserveices/IaiTutorService";
 import { AITutorService } from "../services/AiTutorService";
+import { IJobApplicationRepository } from "../interfaces/Irepositories/IjobApplicationRepository";
+
+import { IJobApplicationService } from "../interfaces/Iserveices/IjobApplicationService";
+import { JobApplicationService } from "../services/jobApplicationService";
+import { JobApplicationRepository } from "../repository/jobApplicationRepository";
+import { IInterviewSerivce } from "../interfaces/Iserveices/IinterviewService";
+import { InterviewService } from "../services/interviewService";
+import { IInterviewRepository } from "../interfaces/Irepositories/IinterviewRepository";
+import { InterviewRepository } from "../repository/interviewRepository";
 
 container.registerSingleton<IOTPService>("IOTPService", OTPService);
 container.registerSingleton<IUserRepository>("IUserRepository", UserRepository);
@@ -86,20 +94,46 @@ container.registerSingleton<IProblemRepository>(
   ProblemRepository
 );
 container.registerSingleton<IProblemService>("IProblemService", ProblemService);
-container.registerSingleton<ICategoryService>("ICategoryService",CategoryService)
-container.registerSingleton<ICategoryRepository>("ICategoryRepository",CategoryRepository)
-container.registerSingleton<IExecuteService>("IExecuteService",ExecuteService)
-container.registerSingleton<IExecuteRepository>("IExecuteRepository",ExecuteRepository)
-container.registerSingleton<IOutputParser>("IOutputParser",OutputParser)
-container.registerSingleton<ICodeWrapper>("ICodeWrapper",CodeWrapper)
-container.registerSingleton<ITestExecutor>("ITestExecutor",TestExecutor)
-container.registerSingleton<IAIService>("IAIService",AIService)
-container.registerSingleton<IAIRepository>("IAIRepository",AIRepository)
-container.registerSingleton<IJobRepository>("IJobRepository",JobRepository)
-container.registerSingleton<IJobService>("IJobService",JobService)
-container.registerSingleton<IAITutorRepository>("IAITutorRepository",AITutorRepository)
-container.registerSingleton<IAITutorService>("IAITutorService",AITutorService)
-
-
+container.registerSingleton<ICategoryService>(
+  "ICategoryService",
+  CategoryService
+);
+container.registerSingleton<ICategoryRepository>(
+  "ICategoryRepository",
+  CategoryRepository
+);
+container.registerSingleton<IExecuteService>("IExecuteService", ExecuteService);
+container.registerSingleton<IExecuteRepository>(
+  "IExecuteRepository",
+  ExecuteRepository
+);
+container.registerSingleton<IOutputParser>("IOutputParser", OutputParser);
+container.registerSingleton<ICodeWrapper>("ICodeWrapper", CodeWrapper);
+container.registerSingleton<ITestExecutor>("ITestExecutor", TestExecutor);
+container.registerSingleton<IAIService>("IAIService", AIService);
+container.registerSingleton<IAIRepository>("IAIRepository", AIRepository);
+container.registerSingleton<IJobRepository>("IJobRepository", JobRepository);
+container.registerSingleton<IJobService>("IJobService", JobService);
+container.registerSingleton<IAITutorRepository>(
+  "IAITutorRepository",
+  AITutorRepository
+);
+container.registerSingleton<IAITutorService>("IAITutorService", AITutorService);
+container.registerSingleton<IJobApplicationRepository>(
+  "IJobApplicationRepository",
+  JobApplicationRepository
+);
+container.registerSingleton<IJobApplicationService>(
+  "IJobApplicationService",
+  JobApplicationService
+);
+container.registerSingleton<IInterviewSerivce>(
+  "IInterviewSerivce",
+  InterviewService
+);
+container.registerSingleton<IInterviewRepository>(
+  "IInterviewRepository",
+  InterviewRepository
+);
 
 export { container };

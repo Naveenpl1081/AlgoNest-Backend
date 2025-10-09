@@ -1,7 +1,8 @@
-import { IJobResponse, JobResponseDto } from "../../services/jobService";
+
 import {
   IJobRequestDTO,
   JobRequestResponse,
+  JobResponseDto,
   UpdateJobResponseDTO,
 } from "../DTO/IServices/IJobPostService";
 

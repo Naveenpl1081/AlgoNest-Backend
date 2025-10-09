@@ -10,6 +10,11 @@ export interface IJobRequestDTO {
   maxSalary: number;
   requirements: string[];
   responsibilities: string[];
+  recruiterId?:{
+    userName:string,
+    companyName:string,
+    companyType:string
+  }
 }
 
 
@@ -33,6 +38,15 @@ export interface UpdateJobResponseDTO{
   success:boolean,
   message:string,
   data?:IJobRequestDTO
+}
+
+export interface JobResponseDto {
+  success: boolean;
+  message: string;
+  data?:{
+    _id:string,
+    status?: "Active" | "InActive" ;
+  }
 }
 
 

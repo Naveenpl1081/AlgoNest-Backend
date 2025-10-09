@@ -5,7 +5,6 @@ import { BaseRepository } from "./baseRepository";
 import JobPost from "../models/jobPostSchema";
 import { FilterQuery, Types } from "mongoose";
 
-
 export class JobRepository
   extends BaseRepository<IJobPost>
   implements IJobRepository
@@ -89,8 +88,6 @@ export class JobRepository
         }
       }
 
-    
-
       const result = (await this.find(filter, {
         pagination: { page, limit },
         sort: { createdAt: -1 },
@@ -160,7 +157,6 @@ export class JobRepository
     pages: number;
   }> {
     try {
-     
       const page = options.page || 1;
       const limit = options.limit || 6;
 
@@ -201,14 +197,16 @@ export class JobRepository
         }
       }
 
-   
-
       const result = (await this.find(filter, {
         pagination: { page, limit },
         sort: { createdAt: -1 },
+        populate: {
+          path: "recruiterId",
+          select: "username companyName companyType",
+        },
       })) as { data: IJobPost[]; total: number };
 
-  
+      console.log("repposresult", result);
 
       return {
         data: result.data,

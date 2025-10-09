@@ -10,6 +10,8 @@ import { ExecuteController } from "../controllers/executeController";
 import { AiController } from "../controllers/aiController";
 import { AITutorController } from "../controllers/AiTutorCntroller";
 import { JobController } from "../controllers/jobController";
+import { JobApplicationController } from "../controllers/jobApplicationController";
+import { InterviewController } from "../controllers/interviewController";
 
 export class UserRoutes {
   private router: Router;
@@ -26,8 +28,12 @@ export class UserRoutes {
     const problemController = container.resolve(ProblemController);
     const executeController = container.resolve(ExecuteController);
     const aiController = container.resolve(AiController);
-    const aiTutorController=container.resolve(AITutorController)
-    const jobController=container.resolve(JobController)
+    const aiTutorController = container.resolve(AITutorController);
+    const jobController = container.resolve(JobController);
+    const interviewController=container.resolve(InterviewController)
+    const jobApplicationController = container.resolve(
+      JobApplicationController
+    );
 
     this.router.post("/signup", userController.register.bind(userController));
     this.router.post(
@@ -113,6 +119,22 @@ export class UserRoutes {
       "/alljobpost",
       authMiddleware.authenticate(Roles.USER),
       jobController.getAllJobDetails.bind(jobController)
+    );
+    this.router.post(
+      "/applyjob",
+      authMiddleware.authenticate(Roles.USER),
+      upload.fields([
+        { name: "resume", maxCount: 1 },
+        { name: "plusTwoCertificate", maxCount: 1 },
+        { name: "degreeCertificate", maxCount: 1 },
+        { name: "pgCertificate", maxCount: 1 },
+      ]), 
+      jobApplicationController.applyJob.bind(jobApplicationController)
+    );
+    this.router.get(
+      "/allinterviews",
+      authMiddleware.authenticate(Roles.USER),
+      interviewController.getAllInterviews.bind(interviewController)
     );
   }
   public getRouter(): Router {

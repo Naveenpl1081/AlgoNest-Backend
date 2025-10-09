@@ -21,11 +21,10 @@ export class AdminController {
 
   async login(req: Request, res: Response): Promise<void> {
     try {
-      console.log("body", req.body);
       const { email, password } = req.body;
 
       const result = await this._adminService.loginAdmin(email, password);
-      console.log("admin result", result);
+      
 
       if (result.success) {
         res.cookie("refresh_token", result.refresh_token, {
@@ -63,19 +62,14 @@ export class AdminController {
       const search = (req.query.search as string) || undefined;
       const status = (req.query.status as string) || undefined;
 
-      console.log("status,", status);
-
       const serviceResponse = await this._userService.getAllUsers({
         page,
         limit,
         search,
         status,
       });
-
-      console.log(
-        "result from the fetching all users controller:",
-        serviceResponse
-      );
+      
+  
 
       if (serviceResponse.success) {
         res
@@ -101,10 +95,10 @@ export class AdminController {
   }
   async toggleUserStatus(req: Request, res: Response): Promise<void> {
     try {
-      console.log("enterdddd");
       const userId = req.params.id;
       console.log("userId,", userId);
       const response = await this._userService.findOneUser(userId);
+      
 
       if (!response) {
         res.status(HTTP_STATUS.NOT_FOUND).json({

@@ -2,32 +2,11 @@ import { inject, injectable } from "tsyringe";
 import {
   IJobRequestDTO,
   JobRequestResponse,
+  JobResponseDto,
   UpdateJobResponseDTO,
 } from "../interfaces/DTO/IServices/IJobPostService";
 import { IJobRepository } from "../interfaces/Irepositories/IjobRepository";
 import { IJobService } from "../interfaces/Iserveices/IjobService";
-
-export interface IJobResponse {
-  _id: string;
-  jobrole: string;
-  jobLocation: string;
-  workTime: "full-time" | "part-time" | "contract" | "internship";
-  workMode: "remote" | "on-site" | "hybrid";
-  minExperience: number;
-  minSalary: number;
-  maxSalary: number;
-  requirements: string[];
-  responsibilities: string[];
-  recruiterId: string;
-  status?: "Active" | "InActive";
-  applicationsCount: number;
-}
-
-export interface JobResponseDto{
-  success:boolean,
-  message:string,
-  data:IJobResponse
-}
 
 @injectable()
 export class JobService implements IJobService {
@@ -39,7 +18,25 @@ export class JobService implements IJobService {
     data: IJobRequestDTO
   ): Promise<{ success: boolean; message: string }> {
     try {
-   
+      if(!recruiterId){
+        return {success:false,message:"recruiterId is required"}
+      }
+      if(!data.jobrole){
+        return {success:false,message:"jobrole is required"}
+      }
+      if(!data.jobLocation){
+        return {success:false,message:"joblocation is required"}
+      }
+      if(!data.maxSalary){
+        return {success:false,message:"maxSalary is required"}
+      }
+      if(!data.minSalary){
+        return {success:false,message:"minsalary is required"}
+      }
+      if(!data.minExperience){
+        return {success:false,message:"minExperience is required"}
+      }
+      
       await this._jobRepository.addJobs(recruiterId, data);
       return {
         success: true,
@@ -77,13 +74,27 @@ export class JobService implements IJobService {
         worktime: options.worktime,
       });
 
-      
+      const mappedJob: IJobRequestDTO[] = results.data.map((job) => {
+        return {
+          _id: job._id,
+          jobrole: job.jobrole,
+          jobLocation: job.jobLocation,
+          workTime: job.workTime,
+          workMode: job.workMode,
+          minExperience: job.minExperience,
+          minSalary: job.minSalary,
+          maxSalary: job.maxSalary,
+          requirements: job.requirements,
+          responsibilities: job.responsibilities,
+          status: job.status,
+        };
+      });
 
       return {
         success: true,
         message: "Jobs fetched successfully",
         data: {
-          jobs: results.data,
+          jobs: mappedJob,
           pagination: {
             total: results.total,
             page: results.page,
@@ -148,14 +159,38 @@ export class JobService implements IJobService {
         workmode: options.workmode,
         worktime: options.worktime,
       });
+      console.log("result", results);
 
-     
+      const mappedJob: IJobRequestDTO[] = results.data.map((job) => {
+        return {
+          _id: job._id,
+          jobrole: job.jobrole,
+          jobLocation: job.jobLocation,
+          workTime: job.workTime,
+          workMode: job.workMode,
+          minExperience: job.minExperience,
+          minSalary: job.minSalary,
+          maxSalary: job.maxSalary,
+          requirements: job.requirements,
+          responsibilities: job.responsibilities,
+          status: job.status,
+          recruiterId:
+            typeof job.recruiterId === "object" && job.recruiterId !== null
+              ? {
+                  userName: job.recruiterId.username,
+                  companyName: job.recruiterId.companyName,
+                  companyType: job.recruiterId.companyType,
+                }
+              : undefined,
+        };
+      });
 
+      
       return {
         success: true,
         message: "Jobs fetched successfully",
         data: {
-          jobs: results.data,
+          jobs: mappedJob,
           pagination: {
             total: results.total,
             page: results.page,
@@ -182,7 +217,7 @@ export class JobService implements IJobService {
       }
       const newStatus: "Active" | "InActive" =
         job.status === "Active" ? "InActive" : "Active";
-    
+
       const updatedJob = await this._jobRepository.findJobAndUpdate(
         jobId,
         newStatus
@@ -192,24 +227,13 @@ export class JobService implements IJobService {
       }
       const mappedData = {
         _id: updatedJob._id,
-        jobrole: updatedJob.jobrole,
-        jobLocation: updatedJob.jobLocation,
-        workTime: updatedJob.workTime,
-        workMode: updatedJob.workMode,
-        minExperience: updatedJob.minExperience,
-        minSalary: updatedJob.minSalary,
-        maxSalary: updatedJob.maxSalary,
-        requirements: updatedJob.requirements,
-        responsibilities: updatedJob.responsibilities,
-        recruiterId: updatedJob.recruiterId,
         status: updatedJob.status,
-        applicationsCount: updatedJob.applicationsCount,
       };
-      return{
-        success:true,
-        message:"job status succefully changed",
-        data:mappedData
-      }
+      return {
+        success: true,
+        message: "job status succefully changed",
+        data: mappedData,
+      };
     } catch (error) {
       console.error("error occured:", error);
       return null;

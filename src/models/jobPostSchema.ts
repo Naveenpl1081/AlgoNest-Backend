@@ -1,7 +1,7 @@
-import { Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { IJobPost } from "../interfaces/models/Ijob";
 
-const mongoose = require("mongoose");
+
 
 const jobPostSchema: Schema<IJobPost> = new mongoose.Schema(
   {
@@ -85,6 +85,6 @@ jobPostSchema.index({ workMode: 1 });
 jobPostSchema.index({ isActive: 1 });
 jobPostSchema.index({ createdAt: -1 });
 
-const JobPost = mongoose.model("JobPost", jobPostSchema);
+const JobPost = mongoose.model<IJobPost>("JobPost", jobPostSchema);
 
 export default JobPost;
