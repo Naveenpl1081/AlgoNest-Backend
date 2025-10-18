@@ -78,10 +78,10 @@ export class InterviewController {
   ): Promise<void> {
     try {
       const role = req.user?.role;
-
-      const candidateId = role === Roles.USER.toLowerCase() ? req.user?.id : "";
+console.log(role)
+      const candidateId = role == Roles.USER ? req.user?.id : "";
       const recruiterId =
-        role === Roles.RECRUITER.toLowerCase() ? req.user?.id : "";
+        role == Roles.RECRUITER ? req.user?.id : "";
 
       const page = req.query.page
         ? parseInt(req.query.page as string)
@@ -90,9 +90,10 @@ export class InterviewController {
         ? parseInt(req.query.limit as string)
         : undefined;
 
-      console.log("recruiterId", recruiterId);
+        console.log("candi",candidateId)
+        console.log("recruiter",recruiterId)
 
-      console.log("candidateId", candidateId);
+     
 
       const interviewResponse = await this._interviewService.getAllInterviews({
         page,
@@ -124,6 +125,86 @@ export class InterviewController {
       res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
         .json(createErrorResponse("Error fetching interviews"));
+    }
+  }
+  async rescheduleInterview(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
+    try {
+      const recruiterId = req.user?.id;
+      const { interviewId, date, time, duration, instructions } = req.body;
+
+      if (!recruiterId || !interviewId || !date || !time || !duration) {
+        res
+          .status(400)
+          .json({ success: false, message: "Missing required fields" });
+        return;
+      }
+
+      const interviewPayload = {
+        interviewId,
+        date,
+        time,
+        duration,
+        instructions,
+      };
+
+      const result = await this._interviewService.reScheduleInterview(
+        interviewPayload
+      );
+
+      if (!result.success) {
+        res.status(500).json(result);
+        return;
+      }
+
+     
+
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error in rescheduleInterview controller:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
+    }
+  }
+
+
+  async cancelInterview(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
+    try {
+      
+      const {interviewId}=req.params
+
+      if ( !interviewId ) {
+        res
+          .status(400)
+          .json({ success: false, message: "Missing required fields" });
+        return;
+      }
+
+      const result = await this._interviewService.cancelInterview(
+        interviewId
+      );
+
+      if (!result.success) {
+        res.status(500).json(result);
+        return;
+      }
+
+     
+
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error in rescheduleInterview controller:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
     }
   }
 }

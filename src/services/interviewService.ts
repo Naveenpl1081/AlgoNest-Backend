@@ -1,7 +1,7 @@
 import { inject, injectable } from "tsyringe";
 import { IInterviewRepository } from "../interfaces/Irepositories/IinterviewRepository";
 import { IInterviewSerivce } from "../interfaces/Iserveices/IinterviewService";
-import { IInterview, IInterviewInput } from "../interfaces/models/Iinterview";
+import { IInterview, IInterviewInput, IScheduledInterviewInput } from "../interfaces/models/Iinterview";
 import crypto from "crypto";
 import {
   IinterviewRequestDTO,
@@ -132,6 +132,66 @@ export class InterviewService implements IInterviewSerivce {
       return {
         success: false,
         message: "Something went wrong while fetching interviews",
+      };
+    }
+  }
+
+  async reScheduleInterview(
+    data:IScheduledInterviewInput
+  ): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+
+      const {interviewId,...datas}=data
+
+      if (!interviewId) {
+        return {
+          success: false,
+          message: "Interview ID is required",
+        };
+      }
+
+      const result = await this._interviewRepository.reScheduleInterview(interviewId,datas)
+
+      return {
+        success:true,
+        message:"succefully rescehduled the date and time",
+        data:result
+      }
+     
+    } catch (error) {
+      console.error("Error in ScheduleInterview service:", error);
+      return {
+        success: false,
+        message: "Failed to schedule interview",
+      };
+    }
+  }
+
+  async cancelInterview(
+    interviewId:string
+  ): Promise<{ success: boolean; message: string;}> {
+    try {
+
+
+      if (!interviewId) {
+        return {
+          success: false,
+          message: "Interview ID is required",
+        };
+      }
+
+      const result = await this._interviewRepository.cancelInterview(interviewId)
+
+      return {
+        success:true,
+        message:"succefully canceled the interview",
+      }
+     
+    } catch (error) {
+      console.error("Error in ScheduleInterview service:", error);
+      return {
+        success: false,
+        message: "Failed to schedule interview",
       };
     }
   }

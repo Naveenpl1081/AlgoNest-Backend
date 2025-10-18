@@ -7,10 +7,11 @@ import {
   IJobApplication,
   IJobApplicationInput,
 } from "../interfaces/models/Ijob";
+const pdfParse = require("pdf-parse");
 import { uploadToCloudinary } from "../utils/cloudinary";
 import axios from "axios";
 import mammoth from "mammoth";
-const pdfParse = require("pdf-parse");
+
 
 @injectable()
 export class JobApplicationService implements IJobApplicationService {
@@ -340,7 +341,7 @@ export class JobApplicationService implements IJobApplicationService {
               console.log(`Processed ${app.name}: ${score}% - ${status}`);
             } catch (error) {
               console.error(
-                `✗ Error processing application ${app._id}:`,
+                ` Error processing application ${app._id}:`,
                 error
               );
               results.errors++;
@@ -367,7 +368,7 @@ export class JobApplicationService implements IJobApplicationService {
   private async extractResumeText(resumeUrl: string): Promise<string> {
     try {
       const baseUrl = process.env.CLOUDINARY_BASE_URL;
-      console.log("bae", baseUrl);
+     
       const fullResumeUrl = resumeUrl.startsWith("http")
         ? resumeUrl
         : `${baseUrl}${resumeUrl}`;

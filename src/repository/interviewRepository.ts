@@ -1,7 +1,7 @@
-import { FilterQuery } from "mongoose";
+import { FilterQuery, Types } from "mongoose";
 import { injectable } from "tsyringe";
 import { IInterviewRepository } from "../interfaces/Irepositories/IinterviewRepository";
-import { IInterview } from "../interfaces/models/Iinterview";
+import { IInterview, IScheduledInterviewInput } from "../interfaces/models/Iinterview";
 import Interview from "../models/interviewSchema";
 import { BaseRepository } from "./baseRepository";
 
@@ -77,4 +77,27 @@ export class InterviewRepository
       throw new Error("Failed to fetch the interviews");
     }
   }
+  async reScheduleInterview(
+   interviewId:string,
+   data:IScheduledInterviewInput
+  ): Promise<IInterview | null> {
+    try {
+      const interview = await this.updateOne(new Types.ObjectId(interviewId),data);
+      return interview;
+    } catch (error) {
+      console.error("Error creating interview:", error);
+      throw new Error("Failed to schedule interview");
+    }
+  }
+  async cancelInterview(
+    interviewId:string,
+   ): Promise<IInterview | null> {
+     try {
+       const interview = await this.updateOne(new Types.ObjectId(interviewId),{status:"cancelled"});
+       return interview;
+     } catch (error) {
+       console.error("Error creating interview:", error);
+       throw new Error("Failed to schedule interview");
+     }
+   }
 }

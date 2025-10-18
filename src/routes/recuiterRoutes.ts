@@ -113,6 +113,16 @@ export class RecruiterRoutes {
       authMiddleware.authenticate(Roles.RECRUITER),
       interviewController.getAllInterviews.bind(interviewController)
     );
+    this.router.put(
+      "/rescheduleinterview",
+      authMiddleware.authenticate(Roles.RECRUITER),
+      interviewController.rescheduleInterview.bind(interviewController)
+    );
+    this.router.patch(
+      "/cancelinterview/:interviewId",
+      authMiddleware.authenticate(Roles.RECRUITER),
+      interviewController.cancelInterview.bind(interviewController)
+    );
   }
   public getRouter(): Router {
     return this.router;

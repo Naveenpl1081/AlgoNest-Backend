@@ -1,5 +1,5 @@
 import { InterviewRequestResponse } from "../DTO/IServices/IInterviewService";
-import { IInterview } from "../models/Iinterview";
+import { IInterview, IScheduledInterviewInput } from "../models/Iinterview";
 
 export interface IInterviewSerivce {
   ScheduleInterview(
@@ -11,4 +11,10 @@ export interface IInterviewSerivce {
     recruiterId?: string;
     candidateId?: string;
   }): Promise<InterviewRequestResponse>;
+  reScheduleInterview(
+    data:IScheduledInterviewInput
+  ): Promise<{ success: boolean; message: string; data?: any }>
+  cancelInterview(
+    interviewId:string
+  ): Promise<{ success: boolean; message: string;}>
 }
