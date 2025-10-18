@@ -29,3 +29,11 @@ export interface IInterviewInput {
   duration: string;
   instructions?: string;
 }
+
+export interface IScheduledInterviewInput {
+  interviewId?:string,
+  date: Date;
+  time: string;
+  duration: string;
+  instructions?: string;
+}
