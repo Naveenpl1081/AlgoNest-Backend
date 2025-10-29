@@ -101,3 +101,16 @@ export interface IJobApplication extends Document {
 }
 
 
+
+export interface LocationSuggestion {
+  display_name: string;
+  lat: string;
+  lon: string;
+  place_id: number;
+}
+
+export interface LocationServiceResponse {
+  success: boolean;
+  message: string;
+  data?: LocationSuggestion[];
+}

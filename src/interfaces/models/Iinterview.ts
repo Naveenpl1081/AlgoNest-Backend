@@ -37,3 +37,31 @@ export interface IScheduledInterviewInput {
   duration: string;
   instructions?: string;
 }
+
+
+export interface IPopulatedCandidate {
+  _id: Types.ObjectId;
+  username: string;
+  email: string;
+}
+
+export interface IPopulatedJob {
+  _id: Types.ObjectId;
+  jobrole: string;
+}
+
+
+export interface IInterviewPopulated extends Document {
+  _id: Types.ObjectId;
+  recruiterId: Types.ObjectId;
+  candidateId: IPopulatedCandidate;
+  jobId?: IPopulatedJob;
+  date: Date;
+  time: string;
+  duration: string;
+  instructions?: string;
+  roomId: string;
+  status: "scheduled" | "completed" | "cancelled";
+  createdAt?: Date;
+  updatedAt?: Date;
+}

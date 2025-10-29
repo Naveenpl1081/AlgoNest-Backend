@@ -1,4 +1,4 @@
-import { IInterview, IScheduledInterviewInput } from "../models/Iinterview";
+import { IInterview, IInterviewPopulated, IScheduledInterviewInput } from "../models/Iinterview";
 
 export interface IInterviewRepository {
   scheduleInterview(userData: Partial<IInterview>): Promise<IInterview>;
@@ -21,4 +21,20 @@ export interface IInterviewRepository {
    cancelInterview(
     interviewId:string,
    ): Promise<IInterview | null>
+   finishInterview(
+    interviewId:string,
+   ): Promise<IInterview | null>
+   interviewCompleteList(options: {
+    page: number;
+    limit: number;
+    search?:string
+    recruiterId: string;
+  }): Promise<{
+    data: IInterviewPopulated[];
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  }>
+  findInterviewById(id: string): Promise<IInterview | null>
 }

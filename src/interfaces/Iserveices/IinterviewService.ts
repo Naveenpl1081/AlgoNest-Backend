@@ -17,4 +17,21 @@ export interface IInterviewSerivce {
   cancelInterview(
     interviewId:string
   ): Promise<{ success: boolean; message: string;}>
+  finishInterview(
+    interviewId:string
+  ): Promise<{ success: boolean; message: string;}>
+  interviewCompleteService(options: {
+    page: number;
+    limit: number;
+    search?:String
+    recruiterId: string;
+  }): Promise<InterviewRequestResponse>
+  sendInterviewResult(data: {
+    interviewId: string;
+    candidateEmail: string;
+    candidateName: string;
+    result: string;
+    message: string;
+    recruiterId: string;
+  }): Promise<{ success: boolean; message: string }>
 }

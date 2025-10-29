@@ -1,18 +1,24 @@
 import { inject, injectable } from "tsyringe";
 import { IInterviewRepository } from "../interfaces/Irepositories/IinterviewRepository";
 import { IInterviewSerivce } from "../interfaces/Iserveices/IinterviewService";
-import { IInterview, IInterviewInput, IScheduledInterviewInput } from "../interfaces/models/Iinterview";
+import {
+  IInterview,
+  IInterviewInput,
+  IScheduledInterviewInput,
+} from "../interfaces/models/Iinterview";
 import crypto from "crypto";
 import {
   IinterviewRequestDTO,
   InterviewRequestResponse,
 } from "../interfaces/DTO/IServices/IInterviewService";
+import { IEmailService } from "../interfaces/Iserveices/IEmailService";
 
 @injectable()
 export class InterviewService implements IInterviewSerivce {
   constructor(
     @inject("IInterviewRepository")
-    private _interviewRepository: IInterviewRepository
+    private _interviewRepository: IInterviewRepository,
+    @inject("IEmailService") private _emailService: IEmailService,
   ) {}
 
   async ScheduleInterview(
@@ -137,11 +143,10 @@ export class InterviewService implements IInterviewSerivce {
   }
 
   async reScheduleInterview(
-    data:IScheduledInterviewInput
+    data: IScheduledInterviewInput
   ): Promise<{ success: boolean; message: string; data?: any }> {
     try {
-
-      const {interviewId,...datas}=data
+      const { interviewId, ...datas } = data;
 
       if (!interviewId) {
         return {
@@ -150,14 +155,16 @@ export class InterviewService implements IInterviewSerivce {
         };
       }
 
-      const result = await this._interviewRepository.reScheduleInterview(interviewId,datas)
+      const result = await this._interviewRepository.reScheduleInterview(
+        interviewId,
+        datas
+      );
 
       return {
-        success:true,
-        message:"succefully rescehduled the date and time",
-        data:result
-      }
-     
+        success: true,
+        message: "succefully rescehduled the date and time",
+        data: result,
+      };
     } catch (error) {
       console.error("Error in ScheduleInterview service:", error);
       return {
@@ -168,11 +175,9 @@ export class InterviewService implements IInterviewSerivce {
   }
 
   async cancelInterview(
-    interviewId:string
-  ): Promise<{ success: boolean; message: string;}> {
+    interviewId: string
+  ): Promise<{ success: boolean; message: string }> {
     try {
-
-
       if (!interviewId) {
         return {
           success: false,
@@ -180,19 +185,145 @@ export class InterviewService implements IInterviewSerivce {
         };
       }
 
-      const result = await this._interviewRepository.cancelInterview(interviewId)
+      const result = await this._interviewRepository.cancelInterview(
+        interviewId
+      );
 
       return {
-        success:true,
-        message:"succefully canceled the interview",
-      }
-     
+        success: true,
+        message: "succefully canceled the interview",
+      };
     } catch (error) {
       console.error("Error in ScheduleInterview service:", error);
       return {
         success: false,
         message: "Failed to schedule interview",
       };
+    }
+  }
+
+  async finishInterview(
+    interviewId: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      if (!interviewId) {
+        return {
+          success: false,
+          message: "Interview ID is required",
+        };
+      }
+
+      const result = await this._interviewRepository.finishInterview(
+        interviewId
+      );
+
+      return {
+        success: true,
+        message: "succefully canceled the interview",
+      };
+    } catch (error) {
+      console.error("Error in ScheduleInterview service:", error);
+      return {
+        success: false,
+        message: "Failed to schedule interview",
+      };
+    }
+  }
+
+  async interviewCompleteService(options: {
+    page: number;
+    limit: number;
+    search?:String
+    recruiterId: string;
+  }): Promise<InterviewRequestResponse> {
+    try {
+      const result = await this._interviewRepository.interviewCompleteList({
+        page: options.page,
+        limit: options.limit,
+        search:options.search as string,
+        recruiterId: options.recruiterId,
+      });
+      const mappedInterviews: IinterviewRequestDTO[] = result.data.map((interview) => ({
+        _id: interview._id.toString(),
+        recruiterId: interview.recruiterId.toString(),
+        candidateId: interview.candidateId?._id?.toString() || interview.candidateId.toString(),
+        candidateName: interview.candidateId?.username,
+        candidateEmail: interview.candidateId?.email,
+        jobId: interview.jobId?._id?.toString() || interview.jobId?.toString(),
+        jobTitle: interview.jobId?.jobrole,
+        date: interview.date,
+        time: interview.time,
+        duration: interview.duration,
+        instructions: interview.instructions,
+        roomId: interview.roomId,
+        status: interview.status,
+        createdAt: interview.createdAt,
+        updatedAt: interview.updatedAt,
+      }));
+  
+      return {
+        message: "Successfully fetched the completed interviews",
+        success: true,
+        data: {
+          interview: mappedInterviews,
+          pagination: {
+            total: result.total,
+            page: result.page,
+            pages: result.pages,
+            limit: result.limit,
+            hasNextPage: result.page < result.pages,
+            hasPrevPage: result.page > 1,
+          },
+        },
+      };
+    } catch (error) {
+      console.error("Error in interviewCompleteService:", error);
+      return {
+        success: false,
+        message: "Failed to fetch completed interviews",
+      };
+    }
+  }
+
+  async sendInterviewResult(data: {
+    interviewId: string;
+    candidateEmail: string;
+    candidateName: string;
+    result: string;
+    message: string;
+    recruiterId: string;
+  }): Promise<{ success: boolean; message: string }> {
+    try {
+      const interview = await this._interviewRepository.findInterviewById(data.interviewId);
+
+      if (!interview) {
+        return { success: false, message: "Interview not found" };
+      }
+
+      if (interview.recruiterId.toString() !== data.recruiterId) {
+        return { success: false, message: "Unauthorized" };
+      }
+
+      if (interview.status !== "completed") {
+        return { success: false, message: "Interview is not completed" };
+      }
+
+     
+      const emailSent = await this._emailService.sendInterviewResultEmail({
+        to: data.candidateEmail,
+        candidateName: data.candidateName,
+        result: data.result,
+        message: data.message,
+      });
+
+      if (!emailSent) {
+        return { success: false, message: "Failed to send email" };
+      }
+
+      return { success: true, message: "Interview result sent successfully" };
+    } catch (error) {
+      console.error("Error in sendInterviewResult:", error);
+      return { success: false, message: "Failed to send interview result" };
     }
   }
 }

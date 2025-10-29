@@ -78,10 +78,9 @@ export class InterviewController {
   ): Promise<void> {
     try {
       const role = req.user?.role;
-console.log(role)
+      console.log(role);
       const candidateId = role == Roles.USER ? req.user?.id : "";
-      const recruiterId =
-        role == Roles.RECRUITER ? req.user?.id : "";
+      const recruiterId = role == Roles.RECRUITER ? req.user?.id : "";
 
       const page = req.query.page
         ? parseInt(req.query.page as string)
@@ -90,10 +89,8 @@ console.log(role)
         ? parseInt(req.query.limit as string)
         : undefined;
 
-        console.log("candi",candidateId)
-        console.log("recruiter",recruiterId)
-
-     
+      console.log("candi", candidateId);
+      console.log("recruiter", recruiterId);
 
       const interviewResponse = await this._interviewService.getAllInterviews({
         page,
@@ -159,7 +156,36 @@ console.log(role)
         return;
       }
 
-     
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error in rescheduleInterview controller:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
+    }
+  }
+
+  async cancelInterview(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
+    try {
+      const { interviewId } = req.params;
+
+      if (!interviewId) {
+        res
+          .status(400)
+          .json({ success: false, message: "Missing required fields" });
+        return;
+      }
+
+      const result = await this._interviewService.cancelInterview(interviewId);
+
+      if (!result.success) {
+        res.status(500).json(result);
+        return;
+      }
 
       res.status(201).json(result);
     } catch (error) {
@@ -171,32 +197,26 @@ console.log(role)
     }
   }
 
-
-  async cancelInterview(
+  async finishInterview(
     req: AuthenticatedRequest,
     res: Response
   ): Promise<void> {
     try {
-      
-      const {interviewId}=req.params
+      const { interviewId } = req.params;
 
-      if ( !interviewId ) {
+      if (!interviewId) {
         res
           .status(400)
           .json({ success: false, message: "Missing required fields" });
         return;
       }
 
-      const result = await this._interviewService.cancelInterview(
-        interviewId
-      );
+      const result = await this._interviewService.finishInterview(interviewId);
 
       if (!result.success) {
         res.status(500).json(result);
         return;
       }
-
-     
 
       res.status(201).json(result);
     } catch (error) {
@@ -205,6 +225,120 @@ console.log(role)
         success: false,
         message: "Internal Server Error",
       });
+    }
+  }
+
+  async getAllCompleteInterviews(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = (req.query.search as string) || undefined;
+      const recruiterId = req.user?.id;
+
+      if (!recruiterId) {
+        res
+          .status(HTTP_STATUS.UNAUTHORIZED)
+          .json(createErrorResponse("Recruiter ID not found"));
+        return;
+      }
+
+      const serviceResponse =
+        await this._interviewService.interviewCompleteService({
+          page,
+          limit,
+          search,
+          recruiterId,
+        });
+
+      if (serviceResponse.success) {
+        res
+          .status(HTTP_STATUS.OK)
+          .json(
+            createSuccessResponse(serviceResponse.data, serviceResponse.message)
+          );
+      } else {
+        res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json(
+            createErrorResponse(
+              serviceResponse.message || "Failed to fetch complete interviews"
+            )
+          );
+      }
+    } catch (error) {
+      console.error("Error in getAllCompleteInterviews controller:", error);
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json(createErrorResponse("Error fetching interviews"));
+    }
+  }
+
+  async sendInterviewResult(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
+    try {
+      const { interviewId, candidateEmail, candidateName, result, message } =
+        req.body;
+      const recruiterId = req.user?.id;
+
+      if (
+        !interviewId ||
+        !candidateEmail ||
+        !candidateName ||
+        !result ||
+        !message
+      ) {
+        res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json(createErrorResponse("All fields are required"));
+        return;
+      }
+
+      if (!recruiterId) {
+        res
+          .status(HTTP_STATUS.UNAUTHORIZED)
+          .json(createErrorResponse("Recruiter ID not found"));
+        return;
+      }
+
+      if (!["selected", "rejected"].includes(result)) {
+        res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json(createErrorResponse("Invalid result type"));
+        return;
+      }
+
+      const serviceResponse = await this._interviewService.sendInterviewResult({
+        interviewId,
+        candidateEmail,
+        candidateName,
+        result,
+        message,
+        recruiterId,
+      });
+
+      if (serviceResponse.success) {
+        res
+          .status(HTTP_STATUS.OK)
+          .json(createSuccessResponse(null, serviceResponse.message));
+      } else {
+        res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json(
+            createErrorResponse(
+              serviceResponse.message || "Failed to send result email"
+            )
+          );
+      }
+    } catch (error) {
+      console.error("Error in sendInterviewResult controller:", error);
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json(createErrorResponse("Error sending interview result"));
     }
   }
 }
