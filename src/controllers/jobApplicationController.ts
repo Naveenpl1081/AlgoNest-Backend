@@ -20,6 +20,8 @@ export class JobApplicationController {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       const userId = req.user?.id;
 
+      console.log("req.body in applyjob controller:",req.body);
+
       if (!userId) {
         res.status(HTTP_STATUS.UNAUTHORIZED).json({
           success: false,

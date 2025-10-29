@@ -31,4 +31,15 @@ export interface IJobService {
     worktime?: string;
   }): Promise<JobRequestResponse>
   findOneJob(jobId: string): Promise<JobResponseDto | null>
+  fetchLocationSuggestions(query: string): Promise<{
+    success: boolean;
+    message: string;
+    data?: Array<{
+      display_name: string;
+      lat: string;
+      lon: string;
+      place_id: number;
+    }>;
+  }>;
+  getJobById(jobId: string): Promise<any>
 }

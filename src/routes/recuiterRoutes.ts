@@ -123,6 +123,23 @@ export class RecruiterRoutes {
       authMiddleware.authenticate(Roles.RECRUITER),
       interviewController.cancelInterview.bind(interviewController)
     );
+    this.router.patch(
+      "/finishedinterview/:interviewId",
+      authMiddleware.authenticate(Roles.RECRUITER),
+      interviewController.finishInterview.bind(interviewController)
+    );
+    this.router.get("/locations", jobController.fetchLocations.bind(jobController));
+    this.router.get(
+      "/completeinterviews",
+      authMiddleware.authenticate(Roles.RECRUITER),
+      interviewController.getAllCompleteInterviews.bind(interviewController)
+    );
+    this.router.post(
+      "/sendresult",
+      authMiddleware.authenticate(Roles.RECRUITER),
+      interviewController.sendInterviewResult.bind(interviewController)
+    );
+
   }
   public getRouter(): Router {
     return this.router;

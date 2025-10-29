@@ -18,6 +18,22 @@ export interface IJobRequestDTO {
 }
 
 
+export interface IJobPostResponse {
+  _id: string;
+  jobrole: string;
+  jobLocation: string;
+  workTime: string;
+  workMode: string;
+  minExperience: number;
+  minSalary: number;
+  maxSalary: number;
+  requirements: string[];
+  responsibilities: string[];
+  recruiterId: string;
+  applicationsCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
 export interface JobRequestResponse{
   success:boolean,
   message:string,
@@ -50,4 +66,9 @@ export interface JobResponseDto {
 }
 
 
+export interface ServiceResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
   

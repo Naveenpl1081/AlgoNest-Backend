@@ -30,7 +30,7 @@ export class UserRoutes {
     const aiController = container.resolve(AiController);
     const aiTutorController = container.resolve(AITutorController);
     const jobController = container.resolve(JobController);
-    const interviewController=container.resolve(InterviewController)
+    const interviewController = container.resolve(InterviewController);
     const jobApplicationController = container.resolve(
       JobApplicationController
     );
@@ -128,13 +128,22 @@ export class UserRoutes {
         { name: "plusTwoCertificate", maxCount: 1 },
         { name: "degreeCertificate", maxCount: 1 },
         { name: "pgCertificate", maxCount: 1 },
-      ]), 
+      ]),
       jobApplicationController.applyJob.bind(jobApplicationController)
     );
     this.router.get(
       "/allinterviews",
       authMiddleware.authenticate(Roles.USER),
       interviewController.getAllInterviews.bind(interviewController)
+    );
+    this.router.get(
+      "/locations",
+      jobController.fetchLocations.bind(jobController)
+    );
+    this.router.get(
+      "/getonejob/:jobId",
+      authMiddleware.authenticate(Roles.USER),
+      jobController.getJobById.bind(jobController)
     );
   }
   public getRouter(): Router {

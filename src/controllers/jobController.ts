@@ -211,4 +211,56 @@ export class JobController {
       });
     }
   }
+
+  async fetchLocations(req: Request, res: Response): Promise<void> {
+    try {
+      const query = req.query.query as string;
+
+      if (!query || query.trim().length < 3) {
+        res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json(
+            createErrorResponse("Query must be at least 3 characters long")
+          );
+        return;
+      }
+
+      const result = await this._jobService.fetchLocationSuggestions(
+        query.trim()
+      );
+
+      if (result.success) {
+        res
+          .status(HTTP_STATUS.OK)
+          .json(createSuccessResponse(result.data, result.message));
+      } else {
+        res
+          .status(HTTP_STATUS.BAD_REQUEST)
+          .json(
+            createErrorResponse(result.message || "Failed to fetch locations")
+          );
+      }
+    } catch (error) {
+      console.error("Error in fetchLocations controller:", error);
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json(createErrorResponse("Error fetching location suggestions"));
+    }
+  }
+
+
+  async getJobById(req:Request,res:Response):Promise<void>{
+    try {
+      const {jobId}=req.params
+
+      const response=await this._jobService.getJobById(jobId)
+      res.status(200).json(response);
+
+    } catch (error) {
+      console.error("Error in fetchLocations controller:", error);
+      res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json(createErrorResponse("Error fetching location suggestions"));
+    }
+  }
 }
