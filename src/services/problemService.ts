@@ -162,7 +162,7 @@ export class ProblemService implements IProblemService {
     difficulty?: string
   ): Promise<IProblem[]> {
     try {
-      const filter: FilterQuery<IProblem> = { visible: true, status: "Active" };
+      const filter: FilterQuery<IProblem> = {status: "Active" };
 
       if (query) {
         filter.$or = [

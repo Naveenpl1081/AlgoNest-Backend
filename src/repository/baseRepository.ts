@@ -1,4 +1,11 @@
-import { Model, Document, FilterQuery, UpdateQuery, SortOrder } from "mongoose";
+import {
+  Model,
+  Document,
+  FilterQuery,
+  UpdateQuery,
+  SortOrder,
+  Types,
+} from "mongoose";
 import { IBaseRepository } from "../interfaces/Irepositories/IbaseRepository";
 import { ICategory } from "../interfaces/models/Icategory";
 type PopulateOption = { path: string; select?: string };
@@ -76,4 +83,46 @@ export class BaseRepository<T extends Document> implements IBaseRepository<T> {
   ): Promise<T | null> {
     return await this.model.findByIdAndUpdate(filter, update, { new: true });
   }
+
+  async addLike(answerId: string, userId: string): Promise<T | null> {
+    return await this.model.findByIdAndUpdate(
+      answerId,
+      {
+        $addToSet: { likes: new Types.ObjectId(userId) },
+        $pull: { dislikes: new Types.ObjectId(userId) },
+      },
+      { new: true }
+    );
+  }
+
+  async removeLike(answerId: string, userId: string): Promise<T | null> {
+    return await this.model.findByIdAndUpdate(
+      answerId,
+      { $pull: { likes: new Types.ObjectId(userId) } },
+      { new: true }
+    );
+  }
+
+  async addDislike(answerId: string, userId: string): Promise<T | null> {
+    return await this.model.findByIdAndUpdate(
+      answerId,
+      {
+        $addToSet: { dislikes: new Types.ObjectId(userId) },
+        $pull: { likes: new Types.ObjectId(userId) },
+      },
+      { new: true }
+    );
+  }
+
+  async removeDislike(answerId: string, userId: string): Promise<T | null> {
+    return await this.model.findByIdAndUpdate(
+      answerId,
+      { $pull: { dislikes: new Types.ObjectId(userId) } },
+      { new: true }
+    );
+  }
+
+  
+
+
 }

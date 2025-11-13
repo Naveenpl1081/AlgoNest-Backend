@@ -40,6 +40,8 @@ const userSchema: Schema<IUser> = new Schema(
       type: String,
       default: "", 
     },
+    planId: { type: mongoose.Schema.Types.ObjectId, ref: "subscriptionPlan", },
+    
   },
   {
     timestamps: true,

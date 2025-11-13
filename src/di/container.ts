@@ -65,6 +65,20 @@ import { IInterviewSerivce } from "../interfaces/Iserveices/IinterviewService";
 import { InterviewService } from "../services/interviewService";
 import { IInterviewRepository } from "../interfaces/Irepositories/IinterviewRepository";
 import { InterviewRepository } from "../repository/interviewRepository";
+import { ICommunityRepository } from "../interfaces/Irepositories/IcommunityRepository";
+import { CommunityRepository } from "../repository/communityRepository";
+import { ICommunityService } from "../interfaces/Iserveices/IcommunityService";
+import { CommunityService } from "../services/communityService";
+import { IAnswerRepository } from "../interfaces/Irepositories/IanswerRepository";
+import { AnswerRepository } from "../repository/answerRepository";
+import { IAnswerService } from "../interfaces/Iserveices/IanswerService";
+import { AnswerService } from "../services/answerService";
+import { ISubscriptionPlanRepository } from "../interfaces/Irepositories/IsubscriptionPlanRepository";
+import { SubscriptionPlanRepository } from "../repository/subscriptionPlanRepository";
+import { ISubscriptionPlanService } from "../interfaces/Iserveices/IsubscriptionPlanService";
+import { SubscriptionPlanService } from "../services/subscriptionPlanService";
+import { IPaymentRepository } from "../interfaces/Irepositories/IpaymentRepository";
+import { PaymentRepository } from "../repository/paymentRepository";
 
 container.registerSingleton<IOTPService>("IOTPService", OTPService);
 container.registerSingleton<IUserRepository>("IUserRepository", UserRepository);
@@ -136,4 +150,29 @@ container.registerSingleton<IInterviewRepository>(
   InterviewRepository
 );
 
+container.registerSingleton<ICommunityRepository>(
+  "ICommunityRepository",
+  CommunityRepository
+);
+container.registerSingleton<ICommunityService>(
+  "ICommunityService",
+  CommunityService
+);
+container.registerSingleton<IAnswerRepository>(
+  "IAnswerRepository",
+  AnswerRepository
+);
+container.registerSingleton<IAnswerService>("IAnswerService", AnswerService);
+container.registerSingleton<ISubscriptionPlanRepository>(
+  "ISubscriptionPlanRepository",
+  SubscriptionPlanRepository
+);
+container.registerSingleton<ISubscriptionPlanService>(
+  "ISubscriptionPlanService",
+  SubscriptionPlanService
+);
+container.registerSingleton<IPaymentRepository>(
+  "IPaymentRepository",
+  PaymentRepository
+);
 export { container };

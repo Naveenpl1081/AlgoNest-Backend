@@ -22,6 +22,9 @@ import { IOTPService } from "../interfaces/Iotp/IOTP";
 import { IEmailService } from "../interfaces/Iserveices/IEmailService";
 import { IOTPRedis } from "../interfaces/Iredis/IOTPRedis";
 import { IJwtService } from "../interfaces/IJwt/Ijwt";
+import { ISubscriptionPlan } from "../interfaces/models/IsubcriptionPlan";
+import mongoose, { Types } from "mongoose";
+import { ISubscriptionPlanRepository } from "../interfaces/Irepositories/IsubscriptionPlanRepository";
 
 type SortOrder = "asc" | "desc";
 
@@ -41,7 +44,9 @@ export class UserService implements IUserService {
     @inject("IOTPService") private _otpService: IOTPService,
     @inject("IEmailService") private _emailService: IEmailService,
     @inject("IOTPRedis") private _otpRedisService: IOTPRedis,
-    @inject("IJwtService") private _jwtService: IJwtService
+    @inject("IJwtService") private _jwtService: IJwtService,
+    @inject("ISubscriptionPlanRepository")
+    private _subscriptionPlanRepo: ISubscriptionPlanRepository
   ) {}
 
   private async generateAndSendOtp(
@@ -287,6 +292,11 @@ export class UserService implements IUserService {
     if (!user) {
       throw new Error("User not found");
     }
+    let subscriptionPlan: ISubscriptionPlan | null = null;
+
+    if (user.planId && !(user.planId instanceof mongoose.Types.ObjectId)) {
+      subscriptionPlan = user.planId as ISubscriptionPlan;
+    }
     return {
       username: user.username,
       email: user.email,
@@ -296,10 +306,9 @@ export class UserService implements IUserService {
       github: user.github,
       linkedin: user.linkedin,
       profileImage: user.profileImage,
+      subscriptionPlan,
     };
   }
-
-  
 
   async updateProfile(
     data: UpdateProfileDTO
@@ -450,6 +459,115 @@ export class UserService implements IUserService {
     } catch (error) {
       console.error("error occured:", error);
       throw error;
+    }
+  }
+
+  async isPremiumService(
+    userId: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const userData = await this._userRepository.isPremium(userId);
+      console.log("userdata", userData);
+
+      const premium = await this._subscriptionPlanRepo.findByPlanName(
+        "PREMIUM"
+      );
+      console.log("premium", premium);
+
+      if (userData?.planId?.toString() === premium?._id?.toString()) {
+        return {
+          success: true,
+          message: "purchased the premium plan",
+        };
+      } else {
+        return {
+          success: false,
+          message: "not purchased the premium plan",
+        };
+      }
+    } catch (error) {
+      throw new Error(error as string);
+    }
+  }
+
+  async isStandardService(
+    userId: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const userData = await this._userRepository.isPremium(userId);
+      console.log("userdata", userData);
+
+      const standard = await this._subscriptionPlanRepo.findByPlanName(
+        "STANDARD"
+      );
+
+      const premium = await this._subscriptionPlanRepo.findByPlanName(
+        "PREMIUM"
+      );
+      console.log("standard", standard);
+
+      if (userData?.planId?.toString() === standard?._id?.toString()) {
+        return {
+          success: true,
+          message: "purchased the standard plan",
+        };
+      } else if (userData?.planId?.toString() === premium?._id?.toString()) {
+        return {
+          success: true,
+          message: "purchased the standard plan",
+        };
+      } else {
+        return {
+          success: false,
+          message: "not purchased the standard plan",
+        };
+      }
+    } catch (error) {
+      throw new Error(error as string);
+    }
+  }
+
+  async isBasic(
+    userId: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const userData = await this._userRepository.isPremium(userId);
+      console.log("userdata", userData);
+
+      const standard = await this._subscriptionPlanRepo.findByPlanName(
+        "STANDARD"
+      );
+
+      const premium = await this._subscriptionPlanRepo.findByPlanName(
+        "PREMIUM"
+      );
+      const basic = await this._subscriptionPlanRepo.findByPlanName("BASIC");
+
+      console.log("basic", basic);
+
+      if (userData?.planId?.toString() === standard?._id?.toString()) {
+        return {
+          success: true,
+          message: "purchased the standard plan",
+        };
+      } else if (userData?.planId?.toString() === premium?._id?.toString()) {
+        return {
+          success: true,
+          message: "purchased the standard plan",
+        };
+      } else if (userData?.planId?.toString() === basic?._id?.toString()) {
+        return {
+          success: true,
+          message: "purchased the standard plan",
+        };
+      } else {
+        return {
+          success: false,
+          message: "not purchased the standard plan",
+        };
+      }
+    } catch (error) {
+      throw new Error(error as string);
     }
   }
 }

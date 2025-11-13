@@ -36,6 +36,7 @@
     "pdf-parse": "^2.2.2",
     "reflect-metadata": "^0.2.2",
     "socket.io": "^4.8.1",
+    "stripe": "^19.3.0",
     "tsyringe": "^4.10.0",
     "uuid": "^8.3.2",
     "winston": "^3.17.0",

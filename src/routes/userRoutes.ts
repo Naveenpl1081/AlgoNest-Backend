@@ -12,6 +12,9 @@ import { AITutorController } from "../controllers/AiTutorCntroller";
 import { JobController } from "../controllers/jobController";
 import { JobApplicationController } from "../controllers/jobApplicationController";
 import { InterviewController } from "../controllers/interviewController";
+import CommunityController from "../controllers/communityController";
+import { AnswerController } from "../controllers/answerController";
+import { SubscriptionPlanController } from "../controllers/subscriptionPlanController";
 
 export class UserRoutes {
   private router: Router;
@@ -34,6 +37,10 @@ export class UserRoutes {
     const jobApplicationController = container.resolve(
       JobApplicationController
     );
+    const communityController=container.resolve(CommunityController)
+    const answerController=container.resolve(AnswerController)
+    const subscriptionController=container.resolve(SubscriptionPlanController)
+    
 
     this.router.post("/signup", userController.register.bind(userController));
     this.router.post(
@@ -144,6 +151,74 @@ export class UserRoutes {
       "/getonejob/:jobId",
       authMiddleware.authenticate(Roles.USER),
       jobController.getJobById.bind(jobController)
+    );
+    this.router.post(
+      "/addquestion",
+      authMiddleware.authenticate(Roles.USER),
+      communityController.addQuestionController.bind(communityController)
+    );
+    this.router.get(
+      "/getallquestions",
+      authMiddleware.authenticate(Roles.USER),
+      communityController.getAllQuestionsController.bind(communityController)
+    );
+    this.router.get(
+      "/getonequestion/:id",
+      authMiddleware.authenticate(Roles.USER),
+      communityController.getOneQuestion.bind(communityController)
+    );
+    this.router.post(
+      "/addAnswer",
+      authMiddleware.authenticate(Roles.USER),
+      answerController.addAnswer.bind(answerController)
+    );
+    this.router.get(
+      "/getallanswers/:questionId",
+      authMiddleware.authenticate(Roles.USER),
+      answerController.getAnswersByQuestionId.bind(answerController)
+    );
+    this.router.post(
+      "/answerlike/:answerId",
+      authMiddleware.authenticate(Roles.USER),
+      answerController.like.bind(answerController)
+    );
+    this.router.post(
+      "/answerdislike/:answerId",
+      authMiddleware.authenticate(Roles.USER),
+      answerController.dislike.bind(answerController)
+    );
+
+    this.router.get(
+      "/showallsubscriptions",
+      authMiddleware.authenticate(Roles.USER),
+      subscriptionController.showAllSubscriptions.bind(subscriptionController)
+    );
+    this.router.post(
+      "/purchase",
+      authMiddleware.authenticate(Roles.USER),
+      subscriptionController.purchaseSubscriptionPlan.bind(subscriptionController)
+    );
+    this.router.post(
+      "/verify-payment/:sessionId",
+      authMiddleware.authenticate(Roles.USER),
+      subscriptionController.verifyStripeSession.bind(
+        subscriptionController
+      )
+    );
+    this.router.get(
+      "/ispremium",
+      authMiddleware.authenticate(Roles.USER),
+      userController.isPremium.bind(userController)
+    );
+    this.router.get(
+      "/isstandard",
+      authMiddleware.authenticate(Roles.USER),
+      userController.isStandard.bind(userController)
+    );
+    this.router.get(
+      "/isbasic",
+      authMiddleware.authenticate(Roles.USER),
+      userController.isBasic.bind(userController)
     );
   }
   public getRouter(): Router {
