@@ -16,18 +16,28 @@ export const dockerExecutor = {
   runCode: (code: string, language: string, timeLimit: number, memoryLimit: number): Promise<ExecutionResult> => {
     return new Promise((resolve) => {
       const id = uuidv4();
-      const tempDir = path.join(__dirname, '..', 'temp', id);
+      
+    
+      const containerTempDir = path.join('/temp', id);
+      
+    
+      const hostBasePath = process.env.HOST_TEMP_PATH || '/temp';
+      const hostTempDir = path.join(hostBasePath, id);
       
       let resolved = false;
       const startTime = Date.now();
       
+      console.log(`[DEBUG] Container temp dir: ${containerTempDir}`);
+      console.log(`[DEBUG] Host temp dir for Docker: ${hostTempDir}`);
+      
       const cleanup = () => {
         try {
-          if (fs.existsSync(tempDir)) {
-            fs.rmSync(tempDir, { recursive: true, force: true });
+          if (fs.existsSync(containerTempDir)) {
+            fs.rmSync(containerTempDir, { recursive: true, force: true });
+            console.log(`[DEBUG] Cleaned up: ${containerTempDir}`);
           }
         } catch (cleanupError) {
-          console.error('Cleanup error:', cleanupError);
+          console.error('[ERROR] Cleanup error:', cleanupError);
         }
       };
 
@@ -35,6 +45,7 @@ export const dockerExecutor = {
         if (!resolved) {
           resolved = true;
           cleanup();
+          console.log('[DEBUG] Timeout handler triggered');
           resolve({
             status: 'timeout',
             error: 'Time limit exceeded - your code took too long to execute',
@@ -42,29 +53,45 @@ export const dockerExecutor = {
             consoleOutput: ''
           });
         }
-      }, timeLimit + 1000); 
+      }, timeLimit + 2000);
 
       try {
-        fs.mkdirSync(tempDir, { recursive: true });
+     
+        fs.mkdirSync(containerTempDir, { recursive: true });
+        
         const fileName = getFileName(language);
-        const filePath = path.join(tempDir, fileName);
+        const filePath = path.join(containerTempDir, fileName);
+        
+      
         fs.writeFileSync(filePath, code);
+        console.log(`[DEBUG] File written to: ${filePath}`);
+        console.log(`[DEBUG] File exists: ${fs.existsSync(filePath)}`);
+        console.log(`[DEBUG] File size: ${fs.statSync(filePath).size} bytes`);
 
-        const dockerCmd = getDockerCommand(language, filePath, timeLimit, memoryLimit);
+        
+        const dockerCmd = getDockerCommand(language, hostTempDir, fileName, timeLimit, memoryLimit);
+        console.log(`[DEBUG] Executing docker command: ${dockerCmd}`);
 
         const childProcess = exec(dockerCmd, { 
-          timeout: timeLimit + 1000,
-          killSignal: 'SIGKILL' 
+          timeout: timeLimit + 2000,
+          killSignal: 'SIGKILL',
+          maxBuffer: 1024 * 1024 * 10
         }, (error, stdout, stderr) => {
           if (resolved) return; 
           
           resolved = true;
           clearTimeout(timeoutHandler);
           const executionTime = Date.now() - startTime;
+          
+          console.log(`[DEBUG] Execution completed in ${executionTime}ms`);
+          console.log(`[DEBUG] stdout length: ${stdout?.length || 0}`);
+          console.log(`[DEBUG] stderr length: ${stderr?.length || 0}`);
+          
           cleanup();
 
           if (error) {
             if (error.killed || error.signal === 'SIGTERM' || error.signal === 'SIGKILL') {
+              console.log('[DEBUG] Process was killed (timeout)');
               return resolve({ 
                 status: 'timeout', 
                 error: 'Time limit exceeded - your code took too long to execute',
@@ -73,7 +100,8 @@ export const dockerExecutor = {
               });
             }
             
-            if (stderr && (stderr.includes('Killed') || stderr.includes('memory'))) {
+            if (stderr && (stderr.includes('Killed') || stderr.includes('memory') || stderr.includes('OOM'))) {
+              console.log('[DEBUG] Memory limit exceeded');
               return resolve({ 
                 status: 'error', 
                 error: 'Memory limit exceeded',
@@ -82,6 +110,8 @@ export const dockerExecutor = {
               });
             }
             
+            console.log('[DEBUG] Execution error:', error.message);
+            console.log('[DEBUG] Full stderr:', stderr);
             return resolve({ 
               status: 'error', 
               error: stderr || error.message || 'Execution failed',
@@ -90,20 +120,33 @@ export const dockerExecutor = {
             });
           }
 
-         
-          if (stderr && 
-              !stderr.includes('Pulling from library') && 
-              !stderr.includes('Status: Downloaded') &&
-              !stderr.includes('Status: Image is up to date')) {
-            return resolve({ 
-              status: 'error', 
-              error: stderr,
-              executionTime,
-              consoleOutput: extractConsoleOutput(stdout)
-            });
+          if (stderr) {
+            const filteredStderr = stderr
+              .split('\n')
+              .filter(line => 
+                !line.includes('Pulling from library') && 
+                !line.includes('Status: Downloaded') &&
+                !line.includes('Status: Image is up to date') &&
+                !line.includes('Digest:') &&
+                !line.includes('already exists') &&
+                line.trim().length > 0
+              )
+              .join('\n');
+            
+            if (filteredStderr) {
+              console.log('[DEBUG] Filtered stderr:', filteredStderr);
+              return resolve({ 
+                status: 'error', 
+                error: filteredStderr,
+                executionTime,
+                consoleOutput: extractConsoleOutput(stdout)
+              });
+            }
           }
 
           const result = parseExecutionOutput(stdout);
+          console.log('[DEBUG] Success! Output length:', result.programOutput.length);
+          
           return resolve({ 
             status: 'success', 
             output: result.programOutput,
@@ -118,6 +161,7 @@ export const dockerExecutor = {
           clearTimeout(timeoutHandler);
           cleanup();
           
+          console.log('[ERROR] Process error:', err.message);
           resolve({
             status: 'error',
             error: `Process error: ${err.message}`,
@@ -132,6 +176,7 @@ export const dockerExecutor = {
         clearTimeout(timeoutHandler);
         cleanup();
         
+        console.log('[ERROR] Setup error:', err);
         resolve({ 
           status: 'error', 
           error: err instanceof Error ? err.message : 'Unknown error',
@@ -142,7 +187,6 @@ export const dockerExecutor = {
     });
   }
 };
-
 
 function parseExecutionOutput(stdout: string): { programOutput: string; consoleOutput: string } {
   if (!stdout) return { programOutput: '', consoleOutput: '' };
@@ -155,7 +199,6 @@ function parseExecutionOutput(stdout: string): { programOutput: string; consoleO
   };
 }
 
-
 function extractConsoleOutput(stdout: string): string {
   if (!stdout) return '';
   
@@ -166,34 +209,27 @@ function extractConsoleOutput(stdout: string): string {
   
   for (const line of lines) {
     if (line.startsWith('CONSOLE:')) {
-      
       if (inConsoleBlock && currentConsoleBlock.length > 0) {
-   
         consoleLogs.push(currentConsoleBlock.join('\n'));
       }
-
       inConsoleBlock = true;
       const consoleContent = line.replace('CONSOLE:', '').trim();
       currentConsoleBlock = consoleContent ? [consoleContent] : [];
     } else if (line.startsWith('RESULT:') || line.startsWith('ERROR:') || line === 'TEST_PASSED') {
-     
       if (inConsoleBlock && currentConsoleBlock.length > 0) {
         consoleLogs.push(currentConsoleBlock.join('\n'));
         currentConsoleBlock = [];
       }
       inConsoleBlock = false;
     } else if (inConsoleBlock) {
-   
       currentConsoleBlock.push(line);
     }
   }
   
- 
   if (inConsoleBlock && currentConsoleBlock.length > 0) {
     consoleLogs.push(currentConsoleBlock.join('\n'));
   }
   
-
   const uniqueLogs = [...new Set(consoleLogs.filter(log => log.trim().length > 0))];
   return uniqueLogs.join('\n\n'); 
 }
@@ -209,22 +245,28 @@ function getFileName(language: string): string {
   }
 }
 
-function getDockerCommand(language: string, filePath: string, timeLimit: number, memoryLimit: number): string {
-  const dir = path.dirname(filePath);
-  const fileName = path.basename(filePath);
-  const timeoutSeconds = Math.max(1, Math.ceil(timeLimit / 1000));
+function getDockerCommand(language: string, hostMountPath: string, fileName: string, timeLimit: number, memoryLimit: number): string {
+ 
+  const timeoutSeconds = Math.ceil(timeLimit / 1000);
+  
+  const baseOptions = `--rm --memory=${memoryLimit}m --cpus=0.5 --network=none --pids-limit=100`;
   
   switch (language) {
     case 'javascript':
-      return `docker run --rm --memory=${memoryLimit}m --cpus=0.5 --network=none --pids-limit=100 -v "${dir}:/code" node:alpine timeout ${timeoutSeconds} node /code/${fileName}`;
+      return `docker run ${baseOptions} -v "${hostMountPath}:/code" node:20-alpine timeout ${timeoutSeconds}s node /code/${fileName}`;
+    
     case 'python':
-      return `docker run --rm --memory=${memoryLimit}m --cpus=0.5 --network=none --pids-limit=100 -v "${dir}:/code" python:3.9-alpine timeout ${timeoutSeconds} python /code/${fileName}`;
+      return `docker run ${baseOptions} -v "${hostMountPath}:/code" python:3.11-alpine timeout ${timeoutSeconds}s python /code/${fileName}`;
+    
     case 'java':
-      return `docker run --rm --memory=${memoryLimit}m --cpus=0.5 --network=none --pids-limit=100 -v "${dir}:/code" openjdk:17-alpine sh -c "timeout ${timeoutSeconds} sh -c 'javac /code/${fileName} && java -cp /code Solution'"`;
+      return `docker run ${baseOptions} -v "${hostMountPath}:/code" openjdk:17-alpine sh -c "cd /code && javac ${fileName} && timeout ${timeoutSeconds}s java Solution"`;
+    
     case 'cpp':
-      return `docker run --rm --memory=${memoryLimit}m --cpus=0.5 --network=none --pids-limit=100 -v "${dir}:/code" gcc:alpine sh -c "timeout ${timeoutSeconds} sh -c 'g++ /code/${fileName} -o /code/a.out && /code/a.out'"`;
+      return `docker run ${baseOptions} -v "${hostMountPath}:/code" gcc:alpine sh -c "g++ /code/${fileName} -o /code/a.out && timeout ${timeoutSeconds}s /code/a.out"`;
+    
     case 'c':
-      return `docker run --rm --memory=${memoryLimit}m --cpus=0.5 --network=none --pids-limit=100 -v "${dir}:/code" gcc:alpine sh -c "timeout ${timeoutSeconds} sh -c 'gcc /code/${fileName} -o /code/a.out && /code/a.out'"`;
+      return `docker run ${baseOptions} -v "${hostMountPath}:/code" gcc:alpine sh -c "gcc /code/${fileName} -o /code/a.out && timeout ${timeoutSeconds}s /code/a.out"`;
+    
     default:
       throw new Error('Unsupported language');
   }

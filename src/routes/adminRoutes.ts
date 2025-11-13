@@ -3,6 +3,7 @@ import { container } from "../di/container";
 import { AdminController } from "../controllers/adminController";
 import { ProblemController } from "../controllers/problemController";
 import { CategoryController } from "../controllers/categoryController";
+import { SubscriptionPlanController } from "../controllers/subscriptionPlanController";
 
 export class AdminRoutes {
   private router: Router;
@@ -16,6 +17,10 @@ export class AdminRoutes {
     const adminController = container.resolve(AdminController);
     const problemController = container.resolve(ProblemController);
     const categoryController = container.resolve(CategoryController);
+    const subscriptionPlanController = container.resolve(
+      SubscriptionPlanController
+    );
+
     this.router.post("/login", adminController.login.bind(adminController));
     this.router.get(
       "/userslist",
@@ -84,6 +89,31 @@ export class AdminRoutes {
     this.router.patch(
       "/problems/:id",
       problemController.toggleProblemStatus.bind(problemController)
+    );
+    this.router.post(
+      "/addsubscription",
+      subscriptionPlanController.addSubscriptionPlan.bind(
+        subscriptionPlanController
+      )
+    );
+    this.router.get(
+      "/subscriptions",
+      subscriptionPlanController.getAllSubscriptions.bind(
+        subscriptionPlanController
+      )
+    );
+
+    this.router.patch(
+      "/subscriptions/:id",
+      subscriptionPlanController.toggleSubscriptionStatus.bind(
+        subscriptionPlanController
+      )
+    );
+    this.router.put(
+      "/editsubscriptions/:subscriptionId",
+      subscriptionPlanController.updateSubscriptionController.bind(
+        subscriptionPlanController
+      )
     );
   }
 

@@ -345,4 +345,63 @@ export class UserController {
         .json({ success: false, error: error.message || "Logout failed" });
     }
   }
+
+  async isPremium(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res
+          .status(HTTP_STATUS.UNAUTHORIZED)
+          .json({ message: "unautherized user" });
+      }
+
+      const response = await this._userService.isPremiumService(
+        userId as string
+      );
+
+      res.status(HTTP_STATUS.OK).json({ data: response });
+    } catch (error:any) {
+      throw new Error(error);
+    }
+  }
+
+  async isStandard(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res
+          .status(HTTP_STATUS.UNAUTHORIZED)
+          .json({ message: "unautherized user" });
+      }
+
+      const response = await this._userService.isStandardService(
+        userId as string
+      );
+
+      res.status(HTTP_STATUS.OK).json({ data: response });
+    } catch (error:any) {
+      throw new Error(error);
+    }
+  }
+  async isBasic(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res
+          .status(HTTP_STATUS.UNAUTHORIZED)
+          .json({ message: "unautherized user" });
+      }
+
+      const response = await this._userService.isBasic(
+        userId as string
+      );
+
+      res.status(HTTP_STATUS.OK).json({ data: response });
+    } catch (error:any) {
+      throw new Error(error);
+    }
+  }
 }

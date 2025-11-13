@@ -24,4 +24,6 @@ export interface IUserRepository {
     limit: number;
     pages: number;
   }>;
+  updateUserPlan(userId: string, planId: string): Promise<IUser | null>
+  isPremium(userId:string):Promise<IUser | null>
 }

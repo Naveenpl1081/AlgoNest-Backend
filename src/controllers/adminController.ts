@@ -68,9 +68,8 @@ export class AdminController {
         search,
         status,
       });
+    
       
-  
-
       if (serviceResponse.success) {
         res
           .status(HTTP_STATUS.OK)

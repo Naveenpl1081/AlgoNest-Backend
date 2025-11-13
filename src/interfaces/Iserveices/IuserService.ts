@@ -38,4 +38,13 @@ export interface IUserService {
       status: string;
     };
   }>;
+  isPremiumService(
+    userId: string
+  ): Promise<{ success: boolean; message: string }>
+  isStandardService(
+    userId: string
+  ): Promise<{ success: boolean; message: string }>
+  isBasic(
+    userId: string
+  ): Promise<{ success: boolean; message: string }>
 }

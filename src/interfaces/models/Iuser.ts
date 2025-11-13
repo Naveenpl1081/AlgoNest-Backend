@@ -1,5 +1,6 @@
-import { Document } from "mongoose";
+import mongoose, { Document } from "mongoose";
 import { IUserResponse } from "../DTO/IServices/IUserServise";
+import { ISubscriptionPlan } from "./IsubcriptionPlan";
 
 export interface IUser extends Document {
   _id: string;
@@ -12,6 +13,7 @@ export interface IUser extends Document {
   linkedin?: string;
   profileImage?: string;
   status: string;
+  planId?: mongoose.Schema.Types.ObjectId | ISubscriptionPlan | null;
   createdAt?: Date;
   updatedAt?: Date;
   isVerified?: boolean;
@@ -26,6 +28,8 @@ export interface UserProfile {
   github?: string;
   linkedin?: string;
   profileImage?: string;
+  subscriptionPlan?: ISubscriptionPlan | null; 
+
 }
 
 export interface UserListResponse {

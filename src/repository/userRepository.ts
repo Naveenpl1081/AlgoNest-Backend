@@ -37,7 +37,7 @@ export class UserRepository
   }
   async findUserById(id: string): Promise<IUser | null> {
     try {
-      const user = await this.findById(id);
+      const user = await this.model.findById(id).populate("planId").exec();
       return user;
     } catch (error) {
       console.error(error);
@@ -132,6 +132,26 @@ export class UserRepository
     } catch (error) {
       console.error(error);
       return null;
+    }
+  }
+
+  async updateUserPlan(userId: string, planId: string): Promise<IUser | null> {
+    const updatedUser = await this.model.findByIdAndUpdate(
+      userId,
+      { planId },
+      { new: true }
+    );
+
+    return updatedUser;
+  }
+
+  async isPremium(userId:string):Promise<IUser | null>{
+    try {
+      const user=await this.findById(userId)
+      return user
+    } catch (error) {
+      console.error("error occurred while fetching the users:", error);
+      throw new Error("Failed to fetch the users");
     }
   }
 }
