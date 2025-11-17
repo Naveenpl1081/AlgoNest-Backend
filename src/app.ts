@@ -23,16 +23,31 @@ export class App {
     this.app.use(loggerMiddleware.getMiddleware());
 
     const corsOptions = {
-      origin: process.env.CLIENT_URL,
+      origin: (origin:any, callback:any) => {
+        const allowedOrigins = [
+          process.env.CLIENT_URL,
+          "https://algonest.live",
+          "https://www.algonest.live",
+        ];
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, origin);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       credentials: true,
       allowedHeaders: [
-        "Content-Type",
         "Authorization",
-        "X-Requested-With",
-        "Accept",
+        "Content-Type",
+        "Access-Control-Allow-Headers",
         "Origin",
+        "Accept",
+        "X-Requested-With",
+        "Access-Control-Request-Method",
+        "Access-Control-Request-Headers",
       ],
+      exposedHeaders: ["Set-Cookie"],
       preflightContinue: false,
       optionsSuccessStatus: 204,
     };
