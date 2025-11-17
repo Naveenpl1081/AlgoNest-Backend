@@ -1,8 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import { IJobPost } from "../interfaces/models/Ijob";
 
-
-
 const jobPostSchema: Schema<IJobPost> = new mongoose.Schema(
   {
     jobrole: {

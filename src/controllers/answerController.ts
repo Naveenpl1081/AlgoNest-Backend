@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { inject, injectable } from "tsyringe";
 import { IAnswerService } from "../interfaces/Iserveices/IanswerService";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
-import { AnswerService } from "../services/answerService";
+import { HTTP_STATUS } from "../utils/httpStatus";
 
 @injectable()
 export class AnswerController {
@@ -29,10 +29,12 @@ export class AnswerController {
         body
       );
 
-      const statusCode = result.success ? 201 : 400;
+      const statusCode = result.success
+        ? HTTP_STATUS.CREATED
+        : HTTP_STATUS.BAD_REQUEST;
       res.status(statusCode).json(result);
     } catch (error: any) {
-      res.status(500).json({
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: error.message || "Internal server error",
       });
@@ -41,16 +43,22 @@ export class AnswerController {
   async getAnswersByQuestionId(req: Request, res: Response): Promise<void> {
     try {
       const { questionId } = req.params;
-      const page = req.query.page ? parseInt(req.query.page as string) : undefined;
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-  
+      const page = req.query.page
+        ? parseInt(req.query.page as string)
+        : undefined;
+      const limit = req.query.limit
+        ? parseInt(req.query.limit as string)
+        : undefined;
+
       const result = await this._answerService.getAnswersByQuestionId({
         questionId,
         page,
         limit,
       });
-  
-      const statusCode = result.success ? 200 : 400;
+
+      const statusCode = result.success
+        ? HTTP_STATUS.OK
+        : HTTP_STATUS.BAD_REQUEST;
       res.status(statusCode).json(result);
     } catch (error: any) {
       res.status(500).json({
@@ -64,9 +72,8 @@ export class AnswerController {
       const { answerId } = req.params;
       const userId = req.user?.id;
 
-     
       if (!answerId || !userId) {
-        res.status(400).json({
+        res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
           message: "Missing answerId or userId",
         });
@@ -78,9 +85,9 @@ export class AnswerController {
         String(userId)
       );
 
-      res.status(200).json(response);
+      res.status(HTTP_STATUS.OK).json(response);
     } catch (error: any) {
-      res.status(500).json({
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: error.message || "Internal server error",
       });
@@ -93,7 +100,7 @@ export class AnswerController {
       const userId = req.user?.id;
 
       if (!answerId || !userId) {
-        res.status(400).json({
+        res.status(HTTP_STATUS.BAD_REQUEST).json({
           success: false,
           message: "Missing answerId or userId",
         });
@@ -105,9 +112,9 @@ export class AnswerController {
         String(userId)
       );
 
-      res.status(200).json(response);
+      res.status(HTTP_STATUS.OK).json(response);
     } catch (error: any) {
-      res.status(500).json({
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: error.message || "Internal server error",
       });
