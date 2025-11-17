@@ -16,6 +16,8 @@ import {
   LocationSuggestion,
 } from "../interfaces/models/Ijob";
 
+import {jobSchema} from "../utils/validations/jobAddingValidation"
+
 @injectable()
 export class JobService implements IJobService {
   constructor(
@@ -29,21 +31,7 @@ export class JobService implements IJobService {
       if (!recruiterId) {
         return { success: false, message: "recruiterId is required" };
       }
-      if (!data.jobrole) {
-        return { success: false, message: "jobrole is required" };
-      }
-      if (!data.jobLocation) {
-        return { success: false, message: "joblocation is required" };
-      }
-      if (!data.maxSalary) {
-        return { success: false, message: "maxSalary is required" };
-      }
-      if (!data.minSalary) {
-        return { success: false, message: "minsalary is required" };
-      }
-      if (!data.minExperience) {
-        return { success: false, message: "minExperience is required" };
-      }
+      await jobSchema.validate(data, { abortEarly: true });
 
       await this._jobRepository.addJobs(recruiterId, data);
       return {

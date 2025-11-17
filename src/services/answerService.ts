@@ -1,7 +1,10 @@
 import { inject, injectable } from "tsyringe";
 import { IAnswerRepository } from "../interfaces/Irepositories/IanswerRepository";
 import { IAnswerService } from "../interfaces/Iserveices/IanswerService";
-import { ICommunityAnswer, ILikeDislikeResponse } from "../interfaces/models/Ianswer";
+import {
+  ICommunityAnswer,
+  ILikeDislikeResponse,
+} from "../interfaces/models/Ianswer";
 
 @injectable()
 export class AnswerService implements IAnswerService {
@@ -80,7 +83,7 @@ export class AnswerService implements IAnswerService {
         page: options.page,
         limit: options.limit,
       });
-  
+
       return {
         success: true,
         message: "Answers fetched successfully",
@@ -103,8 +106,11 @@ export class AnswerService implements IAnswerService {
       };
     }
   }
-  
-  async likeAnswer(answerId: string, userId: string): Promise<ILikeDislikeResponse> {
+
+  async likeAnswer(
+    answerId: string,
+    userId: string
+  ): Promise<ILikeDislikeResponse> {
     try {
       const result = await this._answerRepository.toggleLike(answerId, userId);
 
@@ -142,9 +148,15 @@ export class AnswerService implements IAnswerService {
     }
   }
 
-  async dislikeAnswer(answerId: string, userId: string): Promise<ILikeDislikeResponse> {
+  async dislikeAnswer(
+    answerId: string,
+    userId: string
+  ): Promise<ILikeDislikeResponse> {
     try {
-      const result = await this._answerRepository.toggleDislike(answerId, userId);
+      const result = await this._answerRepository.toggleDislike(
+        answerId,
+        userId
+      );
 
       if (!result) {
         return {

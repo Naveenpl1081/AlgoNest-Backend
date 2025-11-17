@@ -16,7 +16,8 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
   constructor(
     @inject("ISubscriptionPlanRepository")
     private _subscriptionPlanRepository: ISubscriptionPlanRepository,
-    @inject("IPaymentRepository") private _paymentRepository: IPaymentRepository,
+    @inject("IPaymentRepository")
+    private _paymentRepository: IPaymentRepository,
     @inject("IUserRepository") private _userRepository: IUserRepository
   ) {}
 
@@ -298,24 +299,24 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
 
       await this._userRepository.updateUserPlan(userId, planId);
 
-        const expiryDate = new Date();
-        expiryDate.setMonth(
-          expiryDate.getMonth() + subscriptionPlan.durationInMonths
-        );
+      const expiryDate = new Date();
+      expiryDate.setMonth(
+        expiryDate.getMonth() + subscriptionPlan.durationInMonths
+      );
 
-        return {
-          success: true,
-          message: `${subscriptionPlan.planName} plan activated successfully!`,
-          data: {
-            currentSubscription: {
-              planName: subscriptionPlan.planName,
-              status: "Active",
-              durationInMonths: subscriptionPlan.durationInMonths,
-              expiresAt: expiryDate.toISOString(),
-              amount: parseInt(amount),
-            },
+      return {
+        success: true,
+        message: `${subscriptionPlan.planName} plan activated successfully!`,
+        data: {
+          currentSubscription: {
+            planName: subscriptionPlan.planName,
+            status: "Active",
+            durationInMonths: subscriptionPlan.durationInMonths,
+            expiresAt: expiryDate.toISOString(),
+            amount: parseInt(amount),
           },
-        };
+        },
+      };
     } catch (error) {
       console.log("error occurred while verifying the stripe session", error);
       return {
@@ -333,7 +334,10 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
     };
   }> {
     try {
-      const subscription = await this._subscriptionPlanRepository.findSubscriptionById(subscriptionId);
+      const subscription =
+        await this._subscriptionPlanRepository.findSubscriptionById(
+          subscriptionId
+        );
 
       if (!subscription) {
         return {
@@ -341,12 +345,14 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
           message: "subscription not found",
         };
       }
-      const newStatus = subscription.status === "Active" ? "InActive" : "Active";
+      const newStatus =
+        subscription.status === "Active" ? "InActive" : "Active";
       console.log("subscriptionstauts", newStatus);
-      const updatedSubscription = await this._subscriptionPlanRepository.findSubcriptionAndUpdate(
-        subscriptionId,
-        newStatus
-      );
+      const updatedSubscription =
+        await this._subscriptionPlanRepository.findSubcriptionAndUpdate(
+          subscriptionId,
+          newStatus
+        );
       console.log("updateuser", updatedSubscription);
       if (!updatedSubscription) {
         return {
@@ -368,20 +374,23 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
     }
   }
 
-
   async updateSubscription(
     subscriptionId: string,
     data: ISubscriptionPlan
   ): Promise<{ success: boolean; message: string }> {
     try {
-      const existingSubscription= await this._subscriptionPlanRepository.findSubscriptionById(
-        subscriptionId
-      );
+      const existingSubscription =
+        await this._subscriptionPlanRepository.findSubscriptionById(
+          subscriptionId
+        );
       if (!existingSubscription) {
         return { success: false, message: "subscription not found" };
       }
 
-      await this._subscriptionPlanRepository.updateSubscription(subscriptionId, data);
+      await this._subscriptionPlanRepository.updateSubscription(
+        subscriptionId,
+        data
+      );
 
       return { success: true, message: "subscription updated successfully" };
     } catch (error: unknown) {

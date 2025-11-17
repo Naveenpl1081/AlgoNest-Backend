@@ -17,24 +17,27 @@ export const dockerExecutor = {
     return new Promise((resolve) => {
       const id = uuidv4();
       
-    
-      const containerTempDir = path.join('/temp', id);
+      // 1. Path where the code will be written INSIDE the backend container.
+      // This MUST be the path mapped by the Docker Compose volume: ./temp:/app/temp
+      const containerWriteDir = path.join('/app/temp', id);
       
-    
+      // 2. The path on the HOST system that Docker will mount into the execution container.
+      // This relies on the HOST_TEMP_PATH env var being correctly set to ${PWD}/temp.
       const hostBasePath = process.env.HOST_TEMP_PATH || '/temp';
-      const hostTempDir = path.join(hostBasePath, id);
+      const hostMountDir = path.join(hostBasePath, id);
       
       let resolved = false;
       const startTime = Date.now();
       
-      console.log(`[DEBUG] Container temp dir: ${containerTempDir}`);
-      console.log(`[DEBUG] Host temp dir for Docker: ${hostTempDir}`);
+      console.log(`[DEBUG] Container write dir: ${containerWriteDir}`);
+      console.log(`[DEBUG] Host mount dir for Docker: ${hostMountDir}`);
       
       const cleanup = () => {
         try {
-          if (fs.existsSync(containerTempDir)) {
-            fs.rmSync(containerTempDir, { recursive: true, force: true });
-            console.log(`[DEBUG] Cleaned up: ${containerTempDir}`);
+          // Clean up the directory created inside the backend container
+          if (fs.existsSync(containerWriteDir)) {
+            fs.rmSync(containerWriteDir, { recursive: true, force: true });
+            console.log(`[DEBUG] Cleaned up: ${containerWriteDir}`);
           }
         } catch (cleanupError) {
           console.error('[ERROR] Cleanup error:', cleanupError);
@@ -57,10 +60,12 @@ export const dockerExecutor = {
 
       try {
      
-        fs.mkdirSync(containerTempDir, { recursive: true });
+        // 3. Create the directory using the container's volume-mapped path
+        fs.mkdirSync(containerWriteDir, { recursive: true });
         
         const fileName = getFileName(language);
-        const filePath = path.join(containerTempDir, fileName);
+        // 4. Write the file to the volume-mapped path
+        const filePath = path.join(containerWriteDir, fileName); 
         
       
         fs.writeFileSync(filePath, code);
@@ -69,7 +74,8 @@ export const dockerExecutor = {
         console.log(`[DEBUG] File size: ${fs.statSync(filePath).size} bytes`);
 
         
-        const dockerCmd = getDockerCommand(language, hostTempDir, fileName, timeLimit, memoryLimit);
+        // 5. Pass the host path to the docker command
+        const dockerCmd = getDockerCommand(language, hostMountDir, fileName, timeLimit, memoryLimit);
         console.log(`[DEBUG] Executing docker command: ${dockerCmd}`);
 
         const childProcess = exec(dockerCmd, { 
@@ -249,6 +255,8 @@ function getDockerCommand(language: string, hostMountPath: string, fileName: str
  
   const timeoutSeconds = Math.ceil(timeLimit / 1000);
   
+  // Note: Using 'timeout' might not be reliable on all Docker images.
+  // The outer 'exec' timeout in Node.js provides the primary time limit control.
   const baseOptions = `--rm --memory=${memoryLimit}m --cpus=0.5 --network=none --pids-limit=100`;
   
   switch (language) {
