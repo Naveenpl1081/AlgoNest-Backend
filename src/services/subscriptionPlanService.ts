@@ -153,6 +153,8 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
     }
   }
 
+  
+
   async purchasePlan(
     userId: String,
     planId: string
@@ -175,6 +177,18 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
       }
 
       const amountInCents = Math.round(subscriptionPlan?.price * 100);
+
+      const getClientUrl = () => {
+        switch (process.env.NODE_ENV) {
+          case "production":
+            return process.env.CLIENT_URL || "https://www.algonest.live";
+          case "staging":
+            return process.env.CLIENT_URL || "https://staging.algonest.live";
+          case "development":
+          default:
+            return process.env.CLIENT_URL || "http://localhost:5173";
+        }
+      };
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -201,8 +215,8 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
           durationInMonths: subscriptionPlan.durationInMonths.toString(),
           price: subscriptionPlan.price.toString(),
         },
-        success_url: `http://localhost:5173/user/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `http://localhost:5173/user/subscription?canceled=true`,
+        success_url: `${getClientUrl()}/user/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${getClientUrl()}/user/subscription?canceled=true`,
       } as Stripe.Checkout.SessionCreateParams);
 
       if (!session.url) {
