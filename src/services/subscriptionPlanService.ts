@@ -179,11 +179,9 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
       const amountInCents = Math.round(subscriptionPlan?.price * 100);
 
       const getClientUrl = () => {
-        switch (process.env.NODE_ENV) {
+        switch (process.env.NODE_ENV as string) {
           case "production":
-            return process.env.CLIENT_URL || "https://www.algonest.live";
-          case "staging":
-            return process.env.CLIENT_URL || "https://staging.algonest.live";
+            return process.env.CLIENT_URL ||  "https://www.algonest.live ";
           case "development":
           default:
             return process.env.CLIENT_URL || "http://localhost:5173";
