@@ -178,19 +178,13 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
 
       const amountInCents = Math.round(subscriptionPlan?.price * 100);
 
-      const getClientUrl = () => {
-        switch (process.env.NODE_ENV as string) {
-          case "production":
-            return process.env.CLIENT_URL;
-          case "development":
-          default:
-            return process.env.CLIENT_URL;
-        }
-      };
+      // const getClientUrl = () => {
+      //   return process.env.CLIENT_URL
+      // };
 
-      const envvalue=getClientUrl()
+      // const envvalue=getClientUrl()
 
-      console.log("env value",envvalue)
+      // console.log("env value",envvalue)
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -217,8 +211,8 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
           durationInMonths: subscriptionPlan.durationInMonths.toString(),
           price: subscriptionPlan.price.toString(),
         },
-        success_url: `${getClientUrl()}/user/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${getClientUrl()}/user/subscription?canceled=true`,
+        success_url: `${process.env.CLIENT_URL as string}/user/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.CLIENT_URL as string}/user/subscription?canceled=true`,
       } as Stripe.Checkout.SessionCreateParams);
 
       if (!session.url) {
