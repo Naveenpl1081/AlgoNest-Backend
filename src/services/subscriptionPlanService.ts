@@ -181,12 +181,16 @@ export class SubscriptionPlanService implements ISubscriptionPlanService {
       const getClientUrl = () => {
         switch (process.env.NODE_ENV as string) {
           case "production":
-            return process.env.CLIENT_URL ||  "https://www.algonest.live ";
+            return process.env.CLIENT_URL;
           case "development":
           default:
-            return process.env.CLIENT_URL || "http://localhost:5173";
+            return process.env.CLIENT_URL;
         }
       };
+
+      const envvalue=getClientUrl()
+
+      console.log("env value",envvalue)
 
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
