@@ -83,7 +83,7 @@ export class UserRoutes {
       executeController.stats.bind(executeController)
     );
     this.router.patch(
-      "/edit-profile",
+      "/edit-profile/:userId",
       authMiddleware.authenticate(Roles.USER),
       upload.single("image"),
       userController.updateProfile.bind(userController)

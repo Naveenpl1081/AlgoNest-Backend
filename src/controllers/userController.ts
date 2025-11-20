@@ -296,6 +296,17 @@ export class UserController {
       console.log("reched profile changed");
       const userId = req.user?.id;
       console.log("userId", userId);
+
+      const userIdFromParams = req.params.userId;
+      console.log("userIdParams",userIdFromParams)
+  
+      if (userId !== userIdFromParams) {
+        res.status(403).json({
+          success: false,
+          message: "You are not authorized to edit this profile",
+        });
+      }
+
       if (!userId) {
         res
           .status(HTTP_STATUS.UNAUTHORIZED)
@@ -361,7 +372,7 @@ export class UserController {
       );
 
       res.status(HTTP_STATUS.OK).json({ data: response });
-    } catch (error:any) {
+    } catch (error: any) {
       throw new Error(error);
     }
   }
@@ -381,7 +392,7 @@ export class UserController {
       );
 
       res.status(HTTP_STATUS.OK).json({ data: response });
-    } catch (error:any) {
+    } catch (error: any) {
       throw new Error(error);
     }
   }
@@ -395,12 +406,10 @@ export class UserController {
           .json({ message: "unautherized user" });
       }
 
-      const response = await this._userService.isBasic(
-        userId as string
-      );
+      const response = await this._userService.isBasic(userId as string);
 
       res.status(HTTP_STATUS.OK).json({ data: response });
-    } catch (error:any) {
+    } catch (error: any) {
       throw new Error(error);
     }
   }
