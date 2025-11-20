@@ -298,6 +298,7 @@ export class UserService implements IUserService {
       subscriptionPlan = user.planId as ISubscriptionPlan;
     }
     return {
+      _id:user._id,
       username: user.username,
       email: user.email,
       createdAt: user.createdAt,

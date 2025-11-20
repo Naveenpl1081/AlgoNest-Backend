@@ -20,6 +20,7 @@ export interface IUser extends Document {
 }
 
 export interface UserProfile {
+  _id:string;
   username: string;
   email: string;
   createdAt?: Date;
