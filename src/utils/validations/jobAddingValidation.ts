@@ -10,6 +10,10 @@ export const jobSchema = Yup.object().shape({
     .min(0, "Experience cannot be negative"),
   minSalary: Yup.number().required("Minimum Salary is required"),
   maxSalary: Yup.number().required("Maximum Salary is required"),
-  requirements: Yup.string().required("Requirements are required"),
-  responsibilities: Yup.string().required("Responsibilities are required"),
+  requirements: Yup.array()
+    .of(Yup.string().required())
+    .min(1, "Requirements cannot be empty"),
+  responsibilities: Yup.array()
+    .of(Yup.string().required())
+    .min(1, "Responsibilities cannot be empty"),
 });

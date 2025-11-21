@@ -11,7 +11,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: naveenpl1081/algonest-backend:latest 
+    image: naveenpl1081/algonest-backend:latest
     container_name: algonest-backend
     ports:
       - "3000:3000"
